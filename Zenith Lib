@@ -1,158 +1,309 @@
-local Zenith = { Connections = {} }
-local UserInputService = game:GetService("UserInputService")
+--// Premium Masculine UI Library (From Scratch)
+--// Built for exploit environments
+
+if getgenv().PremiumUILoaded then
+    pcall(function()
+        getgenv().PremiumUI:Destroy()
+    end)
+end
+getgenv().PremiumUILoaded = true
+
 local TweenService = game:GetService("TweenService")
-local CoreGui = game:GetService("CoreGui")
+local UIS = game:GetService("UserInputService")
+local Players = game:GetService("Players")
 
--- [[ CLEANUP ]]
-local function destroyUI()
-    if CoreGui:FindFirstChild("Zenith_Elite") then CoreGui:FindFirstChild("Zenith_Elite"):Destroy() end
-    if CoreGui:FindFirstChild("Zenith_Restore") then CoreGui:FindFirstChild("Zenith_Restore"):Destroy() end
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
+
+local Library = {}
+Library.__index = Library
+
+--// Theme
+local Theme = {
+    BG = Color3.fromRGB(18,18,18),
+    Light = Color3.fromRGB(28,28,28),
+    Accent = Color3.fromRGB(60,70,90),
+    Stroke = Color3.fromRGB(50,50,50),
+    Text = Color3.fromRGB(220,220,220)
+}
+
+--// Helper Tween
+local function Tween(obj, props, t)
+    TweenService:Create(obj, TweenInfo.new(t or 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props):Play()
 end
-destroyUI()
 
-local function CreateTween(obj, info, goal)
-    local tween = TweenService:Create(obj, TweenInfo.new(info or 0.3, Enum.EasingStyle.Quad), goal)
-    tween:Play()
-    return tween
-end
+--// Create
+function Library:CreateWindow(title)
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "PremiumUI"
+    ScreenGui.Parent = game.CoreGui
+    ScreenGui.ResetOnSpawn = false
 
-function Zenith:CreateWindow(config)
-    local title = config.Title or "ZENITH"
-    local reopenText = config.ReopenText or "OPEN"
-    local useKeySystem = config.KeySystem or false
-    local keySettings = config.KeySettings or {}
-    
-    local UI = Instance.new("ScreenGui", CoreGui); UI.Name = "Zenith_Elite"
-    local RestoreUI = Instance.new("ScreenGui", CoreGui); RestoreUI.Name = "Zenith_Restore"; RestoreUI.Enabled = false
-    
-    -- [[ MAIN FRAME ]]
-    local Main = Instance.new("Frame", UI)
-    Main.Size = UDim2.new(0, 520, 0, 380); Main.Position = UDim2.new(0.5, -260, 0.5, -190)
-    Main.BackgroundColor3 = Color3.fromRGB(12, 8, 18); Main.BackgroundTransparency = 0.2
-    Main.Visible = not useKeySystem
-    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
-    
-    local MainStroke = Instance.new("UIStroke", Main); MainStroke.Color = Color3.fromRGB(140, 90, 255); MainStroke.Thickness = 2; MainStroke.Transparency = 0.3
-    
-    local MainGradient = Instance.new("UIGradient", Main)
-    MainGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 15, 55)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 5, 20))
-    })
-    MainGradient.Rotation = 45
+    getgenv().PremiumUI = ScreenGui
 
-    -- Universal Dragging
-    local function makeDraggable(frame, trigger)
-        local dragging, dragStart, startPos
-        trigger.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType.Touch then
-                dragging = true; dragStart = input.Position; startPos = frame.Position
-                input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
-            end
-        end)
-        UserInputService.InputChanged:Connect(function(input)
-            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                local delta = input.Position - dragStart
-                frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-            end
-        end)
-    end
+    -- MAIN
+    local Main = Instance.new("Frame", ScreenGui)
+    Main.Size = UDim2.fromOffset(520, 380)
+    Main.Position = UDim2.fromScale(0.5,0.5) - UDim2.fromOffset(260,190)
+    Main.BackgroundColor3 = Theme.BG
+    Main.BorderSizePixel = 0
 
-    -- [[ KEY SYSTEM ]]
-    if useKeySystem then
-        local KeyFrame = Instance.new("Frame", UI)
-        KeyFrame.Size = UDim2.new(0, 340, 0, 200); KeyFrame.Position = UDim2.new(0.5, -170, 0.5, -100)
-        KeyFrame.BackgroundColor3 = Color3.fromRGB(20, 15, 35); Instance.new("UICorner", KeyFrame); Instance.new("UIStroke", KeyFrame).Color = Color3.fromRGB(150, 100, 255)
-        makeDraggable(KeyFrame, KeyFrame)
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0,6)
+    local stroke = Instance.new("UIStroke", Main)
+    stroke.Color = Theme.Stroke
 
-        local KTitle = Instance.new("TextLabel", KeyFrame)
-        KTitle.Size = UDim2.new(1, 0, 0, 40); KTitle.Text = (keySettings.Title or "VERIFICATION"):upper(); KTitle.Font = Enum.Font.GothamBold; KTitle.TextColor3 = Color3.fromRGB(220, 200, 255); KTitle.TextSize = 14; KTitle.BackgroundTransparency = 1
+    -- TOPBAR
+    local Top = Instance.new("Frame", Main)
+    Top.Size = UDim2.new(1,0,0,32)
+    Top.BackgroundTransparency = 1
 
-        local Box = Instance.new("TextBox", KeyFrame)
-        Box.Size = UDim2.new(0.85, 0, 0, 40); Box.Position = UDim2.new(0.075, 0, 0.35, 0); Box.BackgroundColor3 = Color3.fromRGB(30, 20, 50); Box.PlaceholderText = "Paste Key Here..."; Box.Text = ""; Box.Font = Enum.Font.Gotham; Box.TextColor3 = Color3.fromRGB(255, 255, 255); Box.TextSize = 12; Instance.new("UICorner", Box)
+    local Title = Instance.new("TextLabel", Top)
+    Title.Text = title
+    Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 14
+    Title.TextColor3 = Theme.Text
+    Title.Position = UDim2.fromOffset(10,0)
+    Title.Size = UDim2.fromOffset(200,32)
+    Title.BackgroundTransparency = 1
+    Title.TextXAlignment = Enum.TextXAlignment.Left
 
-        local ChkBtn = Instance.new("TextButton", KeyFrame); ChkBtn.Size = UDim2.new(0.85, 0, 0, 40); ChkBtn.Position = UDim2.new(0.075, 0, 0.65, 0); ChkBtn.Text = "AUTHENTICATE"; ChkBtn.BackgroundColor3 = Color3.fromRGB(150, 100, 255); ChkBtn.TextColor3 = Color3.fromRGB(255, 255, 255); ChkBtn.Font = Enum.Font.GothamBold; ChkBtn.TextSize = 11; Instance.new("UICorner", ChkBtn)
+    -- BUTTONS
+    local Min = Instance.new("TextButton", Top)
+    Min.Text = "-"
+    Min.Size = UDim2.fromOffset(30,30)
+    Min.Position = UDim2.new(1,-70,0,1)
+    Min.BackgroundColor3 = Theme.Light
+    Min.TextColor3 = Theme.Text
+    Instance.new("UICorner", Min)
 
-        ChkBtn.MouseButton1Click:Connect(function()
-            local validKeys = keySettings.Key or {}
-            for _, k in pairs(validKeys) do
-                if Box.Text == k then KeyFrame:Destroy(); Main.Visible = true return end
-            end
-            Box.Text = ""; Box.PlaceholderText = "INVALID KEY"
-        end)
-    end
+    local Close = Min:Clone()
+    Close.Text = "X"
+    Close.Position = UDim2.new(1,-35,0,1)
+    Close.Parent = Top
 
-    -- [[ HEADER (NO LINE) ]]
-    local Header = Instance.new("Frame", Main); Header.Size = UDim2.new(1, 0, 0, 50); Header.BackgroundTransparency = 1
-    local Title = Instance.new("TextLabel", Header); Title.Size = UDim2.new(1, -120, 1, 0); Title.Position = UDim2.new(0, 20, 0, 0); Title.Text = title:upper(); Title.Font = Enum.Font.GothamBold; Title.TextColor3 = Color3.fromRGB(255, 255, 255); Title.TextSize = 15; Title.BackgroundTransparency = 1; Title.TextXAlignment = 0
+    -- DRAGGING
+    local dragging, dragStart, startPos
 
-    local CloseBtn = Instance.new("TextButton", Header); CloseBtn.Size = UDim2.new(0, 30, 0, 30); CloseBtn.Position = UDim2.new(1, -45, 0.5, -15); CloseBtn.Text = "×"; CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 65, 65); CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255); CloseBtn.Font = Enum.Font.GothamBold; CloseBtn.TextSize = 18; Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1,0)
-    local MinBtn = Instance.new("TextButton", Header); MinBtn.Size = UDim2.new(0, 30, 0, 30); MinBtn.Position = UDim2.new(1, -85, 0.5, -15); MinBtn.Text = "−"; MinBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 50); MinBtn.TextColor3 = Color3.fromRGB(220, 220, 220); MinBtn.Font = Enum.Font.GothamBold; MinBtn.TextSize = 18; Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(1,0)
+    Top.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = Main.Position
+        end
+    end)
 
-    makeDraggable(Main, Header)
+    UIS.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            Main.Position = startPos + UDim2.fromOffset(delta.X, delta.Y)
+        end
+    end)
 
-    -- [[ CONTENT SIDEBAR ]]
-    local Nav = Instance.new("Frame", Main); Nav.Size = UDim2.new(0, 150, 1, -70); Nav.Position = UDim2.new(0, 15, 0, 60); Nav.BackgroundTransparency = 1
-    local NavLayout = Instance.new("UIListLayout", Nav); NavLayout.Padding = UDim.new(0, 10)
+    UIS.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
 
-    local Container = Instance.new("Frame", Main); Container.Size = UDim2.new(1, -190, 1, -70); Container.Position = UDim2.new(0, 175, 0, 60); Container.BackgroundTransparency = 1
+    -- REOPEN BUTTON
+    local Reopen = Instance.new("TextButton", ScreenGui)
+    Reopen.Size = UDim2.fromOffset(120,30)
+    Reopen.Position = UDim2.fromScale(0.5,0.9)
+    Reopen.Text = "Reopen UI"
+    Reopen.Visible = false
+    Reopen.BackgroundColor3 = Theme.Light
+    Reopen.TextColor3 = Theme.Text
+    Instance.new("UICorner", Reopen)
 
-    -- [[ X BUTTON FIX ]]
-    CloseBtn.MouseButton1Click:Connect(destroyUI)
-    
-    MinBtn.MouseButton1Click:Connect(function() Main.Visible = false; RestoreUI.Enabled = true end)
+    -- MODAL
+    local Modal = Instance.new("Frame", ScreenGui)
+    Modal.Size = UDim2.fromOffset(300,150)
+    Modal.Position = UDim2.fromScale(0.5,0.5) - UDim2.fromOffset(150,75)
+    Modal.BackgroundColor3 = Theme.BG
+    Modal.Visible = false
+    Instance.new("UICorner", Modal)
+    Instance.new("UIStroke", Modal).Color = Theme.Stroke
 
-    local RestoreBtn = Instance.new("TextButton", RestoreUI); RestoreBtn.Size = UDim2.new(0, 90, 0, 40); RestoreBtn.Position = UDim2.new(0, 20, 0.5, -20); RestoreBtn.BackgroundColor3 = Color3.fromRGB(20, 10, 35); RestoreBtn.Text = reopenText:upper(); RestoreBtn.Font = Enum.Font.GothamBold; RestoreBtn.TextColor3 = Color3.fromRGB(200, 160, 255); Instance.new("UICorner", RestoreBtn); Instance.new("UIStroke", RestoreBtn).Color = Color3.fromRGB(160, 100, 255)
-    makeDraggable(RestoreBtn, RestoreBtn)
-    RestoreBtn.MouseButton1Click:Connect(function() Main.Visible = true; RestoreUI.Enabled = false end)
+    local MText = Instance.new("TextLabel", Modal)
+    MText.Text = "Are you sure you want to close?"
+    MText.Size = UDim2.new(1,-20,0,60)
+    MText.Position = UDim2.fromOffset(10,10)
+    MText.TextWrapped = true
+    MText.BackgroundTransparency = 1
+    MText.TextColor3 = Theme.Text
+    MText.Font = Enum.Font.Gotham
 
-    local Window = { Tabs = {} }
+    local Confirm = Instance.new("TextButton", Modal)
+    Confirm.Text = "Confirm"
+    Confirm.Size = UDim2.fromOffset(120,30)
+    Confirm.Position = UDim2.fromOffset(20,100)
+    Confirm.BackgroundColor3 = Theme.Accent
+    Confirm.TextColor3 = Theme.Text
+    Instance.new("UICorner", Confirm)
+
+    local Cancel = Confirm:Clone()
+    Cancel.Text = "Cancel"
+    Cancel.Position = UDim2.fromOffset(160,100)
+    Cancel.Parent = Modal
+
+    -- MINIMIZE
+    Min.MouseButton1Click:Connect(function()
+        Main.Visible = false
+        Reopen.Visible = true
+    end)
+
+    Reopen.MouseButton1Click:Connect(function()
+        Main.Visible = true
+        Reopen.Visible = false
+    end)
+
+    -- CLOSE
+    Close.MouseButton1Click:Connect(function()
+        Modal.Visible = true
+        Modal.BackgroundTransparency = 1
+        Tween(Modal, {BackgroundTransparency = 0}, 0.2)
+    end)
+
+    Cancel.MouseButton1Click:Connect(function()
+        Modal.Visible = false
+    end)
+
+    Confirm.MouseButton1Click:Connect(function()
+        ScreenGui:Destroy()
+        getgenv().PremiumUILoaded = false
+    end)
+
+    -- KEYBIND (RightCtrl)
+    UIS.InputBegan:Connect(function(input, gpe)
+        if not gpe and input.KeyCode == Enum.KeyCode.RightControl then
+            Main.Visible = not Main.Visible
+            Reopen.Visible = not Main.Visible
+        end
+    end)
+
+    -- TAB HOLDER
+    local TabHolder = Instance.new("Frame", Main)
+    TabHolder.Size = UDim2.new(0,120,1,-32)
+    TabHolder.Position = UDim2.fromOffset(0,32)
+    TabHolder.BackgroundColor3 = Theme.Light
+
+    local Content = Instance.new("Frame", Main)
+    Content.Size = UDim2.new(1,-120,1,-32)
+    Content.Position = UDim2.fromOffset(120,32)
+    Content.BackgroundTransparency = 1
+
+    local Window = {}
+
     function Window:AddTab(name)
-        local TabBtn = Instance.new("TextButton", Nav); TabBtn.Size = UDim2.new(1, 0, 0, 40); TabBtn.BackgroundColor3 = Color3.fromRGB(45, 30, 65); TabBtn.BackgroundTransparency = 0.6; TabBtn.Text = "  " .. name:upper(); TabBtn.Font = Enum.Font.GothamBold; TabBtn.TextColor3 = Color3.fromRGB(160, 140, 200); TabBtn.TextSize = 10; TabBtn.TextXAlignment = 0; Instance.new("UICorner", TabBtn)
-        local TStroke = Instance.new("UIStroke", TabBtn); TStroke.Color = Color3.fromRGB(160, 100, 255); TStroke.Transparency = 0.8
-        
-        local Page = Instance.new("ScrollingFrame", Container); Page.Size = UDim2.new(1, 0, 1, 0); Page.BackgroundTransparency = 1; Page.Visible = false; Page.ScrollBarThickness = 0; Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
-        Instance.new("UIListLayout", Page).Padding = UDim.new(0, 15)
-        
-        TabBtn.MouseButton1Click:Connect(function()
-            for _, t in pairs(Window.Tabs) do 
-                t.Page.Visible = false
-                CreateTween(t.Btn, 0.3, {BackgroundColor3 = Color3.fromRGB(45, 30, 65), TextColor3 = Color3.fromRGB(160, 140, 200)})
-                t.Btn.UIStroke.Transparency = 0.8
+        local TabButton = Instance.new("TextButton", TabHolder)
+        TabButton.Size = UDim2.new(1,0,0,30)
+        TabButton.Text = name
+        TabButton.BackgroundTransparency = 1
+        TabButton.TextColor3 = Theme.Text
+
+        local Page = Instance.new("Frame", Content)
+        Page.Size = UDim2.new(1,0,1,0)
+        Page.Visible = false
+        Page.BackgroundTransparency = 1
+
+        TabButton.MouseButton1Click:Connect(function()
+            for _,v in pairs(Content:GetChildren()) do
+                if v:IsA("Frame") then v.Visible = false end
             end
             Page.Visible = true
-            CreateTween(TabBtn, 0.3, {BackgroundColor3 = Color3.fromRGB(120, 70, 220), TextColor3 = Color3.fromRGB(255, 255, 255)})
-            TStroke.Transparency = 0
         end)
 
-        table.insert(Window.Tabs, {Btn = TabBtn, Page = Page})
-        if #Window.Tabs == 1 then Page.Visible = true; TabBtn.BackgroundColor3 = Color3.fromRGB(120, 70, 220); TabBtn.TextColor3 = Color3.fromRGB(255, 255, 255); TStroke.Transparency = 0 end
-
         local Tab = {}
-        function Tab:AddSection(sName)
-            local Sec = Instance.new("Frame", Page); Sec.BackgroundColor3 = Color3.fromRGB(25, 15, 45); Sec.BackgroundTransparency = 0.4; Sec.Size = UDim2.new(1, 0, 0, 40); Sec.AutomaticSize = Enum.AutomaticSize.Y; Instance.new("UICorner", Sec); Instance.new("UIStroke", Sec).Color = Color3.fromRGB(120, 80, 180)
-            local Sc = Instance.new("Frame", Sec); Sc.Size = UDim2.new(1, 0, 0, 0); Sc.Position = UDim2.new(0, 0, 0, 40); Sc.BackgroundTransparency = 1; Sc.AutomaticSize = Enum.AutomaticSize.Y; Instance.new("UIPadding", Sec).PaddingBottom = UDim.new(0, 12)
-            Instance.new("UIListLayout", Sc).Padding = UDim.new(0, 10); Instance.new("UIPadding", Sc).PaddingLeft = UDim.new(0, 15); Sc.UIPadding.PaddingRight = UDim.new(0, 15)
-            
-            local SHeader = Instance.new("TextLabel", Sec); SHeader.Size = UDim2.new(1, -10, 0, 40); SHeader.Position = UDim2.new(0, 15, 0, 0); SHeader.Text = sName:upper(); SHeader.Font = Enum.Font.GothamBold; SHeader.TextColor3 = Color3.fromRGB(200, 180, 255); SHeader.TextSize = 11; SHeader.BackgroundTransparency = 1; SHeader.TextXAlignment = 0
 
-            local E = {}
-            function E:AddToggle(txt, def, cb)
-                local Tg = Instance.new("TextButton", Sc); Tg.Size = UDim2.new(1, 0, 0, 38); Tg.BackgroundColor3 = Color3.fromRGB(40, 30, 60); Tg.Text = "  " .. txt; Tg.Font = Enum.Font.Gotham; Tg.TextColor3 = Color3.fromRGB(230, 230, 230); Tg.TextSize = 11; Tg.TextXAlignment = 0; Instance.new("UICorner", Tg)
-                local Bx = Instance.new("Frame", Tg); Bx.Size = UDim2.new(0, 20, 0, 20); Bx.Position = UDim2.new(1, -30, 0.5, -10); Bx.BackgroundColor3 = def and Color3.fromRGB(180, 100, 255) or Color3.fromRGB(60, 50, 80); Instance.new("UICorner", Bx)
-                local s = def; Tg.MouseButton1Click:Connect(function() s = not s; CreateTween(Bx, 0.2, {BackgroundColor3 = s and Color3.fromRGB(180, 100, 255) or Color3.fromRGB(60, 50, 80)}); cb(s) end)
+        function Tab:AddSection(name)
+            local Section = Instance.new("Frame", Page)
+            Section.Size = UDim2.new(1,-10,0,200)
+            Section.Position = UDim2.fromOffset(5,5)
+            Section.BackgroundColor3 = Theme.Light
+            Instance.new("UICorner", Section)
+
+            local UIList = Instance.new("UIListLayout", Section)
+            UIList.Padding = UDim.new(0,5)
+
+            local Sec = {}
+
+            function Sec:AddButton(text, callback)
+                local Btn = Instance.new("TextButton", Section)
+                Btn.Size = UDim2.new(1,-10,0,30)
+                Btn.Text = text
+                Btn.BackgroundColor3 = Theme.BG
+                Btn.TextColor3 = Theme.Text
+
+                Btn.MouseButton1Click:Connect(function()
+                    Tween(Btn, {BackgroundColor3 = Theme.Accent}, 0.1)
+                    task.wait(0.1)
+                    Tween(Btn, {BackgroundColor3 = Theme.BG}, 0.1)
+                    callback()
+                end)
             end
-            
-            function E:AddButton(txt, cb)
-                local Btn = Instance.new("TextButton", Sc); Btn.Size = UDim2.new(1, 0, 0, 38); Btn.BackgroundColor3 = Color3.fromRGB(55, 40, 85); Btn.Text = txt; Btn.Font = Enum.Font.Gotham; Btn.TextColor3 = Color3.fromRGB(255, 255, 255); Btn.TextSize = 11; Instance.new("UICorner", Btn); Btn.MouseButton1Click:Connect(cb)
-                Btn.MouseEnter:Connect(function() CreateTween(Btn, 0.2, {BackgroundColor3 = Color3.fromRGB(75, 50, 115)}) end)
-                Btn.MouseLeave:Connect(function() CreateTween(Btn, 0.2, {BackgroundColor3 = Color3.fromRGB(55, 40, 85)}) end)
+
+            function Sec:AddToggle(text, default, callback)
+                local val = default
+                local Btn = Instance.new("TextButton", Section)
+                Btn.Size = UDim2.new(1,-10,0,30)
+                Btn.Text = text .. ": " .. tostring(val)
+                Btn.BackgroundColor3 = Theme.BG
+                Btn.TextColor3 = Theme.Text
+
+                Btn.MouseButton1Click:Connect(function()
+                    val = not val
+                    Btn.Text = text .. ": " .. tostring(val)
+                    callback(val)
+                end)
             end
-            return E
+
+            function Sec:AddSlider(text, min, max, def, callback)
+                local val = def
+
+                local Frame = Instance.new("Frame", Section)
+                Frame.Size = UDim2.new(1,-10,0,40)
+                Frame.BackgroundTransparency = 1
+
+                local Bar = Instance.new("Frame", Frame)
+                Bar.Size = UDim2.new(1,0,0,6)
+                Bar.Position = UDim2.fromOffset(0,20)
+                Bar.BackgroundColor3 = Theme.BG
+
+                local Fill = Instance.new("Frame", Bar)
+                Fill.Size = UDim2.new((val-min)/(max-min),0,1,0)
+                Fill.BackgroundColor3 = Theme.Accent
+
+                local dragging = false
+
+                Bar.InputBegan:Connect(function(i)
+                    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                        dragging = true
+                    end
+                end)
+
+                UIS.InputEnded:Connect(function(i)
+                    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                        dragging = false
+                    end
+                end)
+
+                UIS.InputChanged:Connect(function(i)
+                    if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+                        local pct = math.clamp((i.Position.X - Bar.AbsolutePosition.X)/Bar.AbsoluteSize.X,0,1)
+                        Fill.Size = UDim2.new(pct,0,1,0)
+                        val = math.floor(min + (max-min)*pct)
+                        callback(val)
+                    end
+                end)
+            end
+
+            return Sec
         end
+
         return Tab
     end
+
     return Window
 end
 
-return Zenith
+return Library
