@@ -1,7 +1,7 @@
 --[[
-    STEEL UI LIBRARY
+    STEEL UI LIBRARY | PREMIER EDITION
     A premium, masculine, minimal UI framework for Roblox.
-    Developed from scratch.
+    Optimized for performance, UX, and clean aesthetics.
 ]]
 
 local UIS = game:GetService("UserInputService")
@@ -22,17 +22,20 @@ local Library = {
     Black = Color3.fromRGB(15, 15, 15),
     Charcoal = Color3.fromRGB(25, 25, 25),
     Gray = Color3.fromRGB(40, 40, 40),
+    LightGray = Color3.fromRGB(60, 60, 60),
     Text = Color3.fromRGB(230, 230, 230),
     TextDark = Color3.fromRGB(150, 150, 150)
 }
 
--- Cleanup existing UI
+-- Cleanup existing UI to prevent duplicates
 if CoreGui:FindFirstChild("SteelUI") then
     CoreGui:FindFirstChild("SteelUI"):Destroy()
 end
 
 local function Tween(obj, time, prop)
-    TweenService:Create(obj, TweenInfo.new(time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), prop):Play()
+    local t = TweenService:Create(obj, TweenInfo.new(time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), prop)
+    t:Play()
+    return t
 end
 
 function Library:CreateWindow(title)
@@ -55,26 +58,26 @@ function Library:CreateWindow(title)
     local TabList = Instance.new("ScrollingFrame")
     local TabListLayout = Instance.new("UIListLayout")
 
-    -- Reopen Button
+    -- Reopen Button (Floating Widget)
     local Reopen = Instance.new("TextButton")
     local ReopenCorner = Instance.new("UICorner")
     local ReopenStroke = Instance.new("UIStroke")
     
     Reopen.Name = "Reopen"
-    Reopen.Size = UDim2.new(0, 40, 0, 40)
-    Reopen.Position = UDim2.new(0, 20, 1, -60)
+    Reopen.Size = UDim2.new(0, 45, 0, 45)
+    Reopen.Position = UDim2.new(0, 25, 1, -70)
     Reopen.BackgroundColor3 = Library.Charcoal
     Reopen.Text = "S"
     Reopen.TextColor3 = Library.Text
     Reopen.Font = Enum.Font.GothamBold
-    Reopen.TextSize = 18
+    Reopen.TextSize = 20
     Reopen.Visible = false
     Reopen.Parent = SteelUI
     
-    ReopenCorner.CornerRadius = UDim.new(0, 8)
+    ReopenCorner.CornerRadius = UDim.new(0, 10)
     ReopenCorner.Parent = Reopen
     ReopenStroke.Color = Library.Gray
-    ReopenStroke.Thickness = 1
+    ReopenStroke.Thickness = 1.5
     ReopenStroke.Parent = Reopen
 
     -- Main Window Setup
@@ -94,14 +97,14 @@ function Library:CreateWindow(title)
     MainStroke.Parent = Main
 
     TopBar.Name = "TopBar"
-    TopBar.Size = UDim2.new(1, 0, 0, 35)
+    TopBar.Size = UDim2.new(1, 0, 0, 38)
     TopBar.BackgroundColor3 = Library.Charcoal
     TopBar.BorderSizePixel = 0
     TopBar.Parent = Main
 
     Title.Name = "Title"
-    Title.Size = UDim2.new(0, 200, 1, 0)
-    Title.Position = UDim2.new(0, 12, 0, 0)
+    Title.Size = UDim2.new(0, 250, 1, 0)
+    Title.Position = UDim2.new(0, 15, 0, 0)
     Title.BackgroundTransparency = 1
     Title.Text = title:upper()
     Title.TextColor3 = Library.Text
@@ -117,34 +120,35 @@ function Library:CreateWindow(title)
     Buttons.Parent = TopBar
 
     Close.Name = "Close"
-    Close.Size = UDim2.new(0, 35, 0, 35)
-    Close.Position = UDim2.new(1, -35, 0, 0)
+    Close.Size = UDim2.new(0, 38, 0, 38)
+    Close.Position = UDim2.new(1, -38, 0, 0)
     Close.BackgroundTransparency = 1
     Close.Text = "×"
     Close.TextColor3 = Library.TextDark
     Close.Font = Enum.Font.Gotham
-    Close.TextSize = 20
+    Close.TextSize = 22
     Close.Parent = Buttons
 
     Minimize.Name = "Minimize"
-    Minimize.Size = UDim2.new(0, 35, 0, 35)
-    Minimize.Position = UDim2.new(1, -70, 0, 0)
+    Minimize.Size = UDim2.new(0, 38, 0, 38)
+    Minimize.Position = UDim2.new(1, -76, 0, 0)
     Minimize.BackgroundTransparency = 1
     Minimize.Text = "-"
     Minimize.TextColor3 = Library.TextDark
     Minimize.Font = Enum.Font.Gotham
-    Minimize.TextSize = 20
+    Minimize.TextSize = 22
     Minimize.Parent = Buttons
 
     Sidebar.Name = "Sidebar"
-    Sidebar.Size = UDim2.new(0, 140, 1, -35)
-    Sidebar.Position = UDim2.new(0, 0, 0, 35)
+    Sidebar.Size = UDim2.new(0, 150, 1, -38)
+    Sidebar.Position = UDim2.new(0, 0, 0, 38)
     Sidebar.BackgroundColor3 = Library.Charcoal
     Sidebar.BorderSizePixel = 0
     Sidebar.Parent = Main
 
     TabList.Name = "TabList"
-    TabList.Size = UDim2.new(1, 0, 1, 0)
+    TabList.Size = UDim2.new(1, 0, 1, -10)
+    TabList.Position = UDim2.new(0,0,0,5)
     TabList.BackgroundTransparency = 1
     TabList.ScrollBarThickness = 0
     TabList.Parent = Sidebar
@@ -154,12 +158,12 @@ function Library:CreateWindow(title)
     TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
     Container.Name = "Container"
-    Container.Size = UDim2.new(1, -150, 1, -45)
-    Container.Position = UDim2.new(0, 145, 0, 40)
+    Container.Size = UDim2.new(1, -170, 1, -55)
+    Container.Position = UDim2.new(0, 160, 0, 48)
     Container.BackgroundTransparency = 1
     Container.Parent = Main
 
-    -- Modal System
+    -- Modal System (Confirmation UI)
     local ModalOverlay = Instance.new("TextButton")
     ModalOverlay.Size = UDim2.new(1, 0, 1, 0)
     ModalOverlay.BackgroundColor3 = Color3.new(0,0,0)
@@ -171,18 +175,18 @@ function Library:CreateWindow(title)
     ModalOverlay.Parent = Main
 
     local Modal = Instance.new("Frame")
-    Modal.Size = UDim2.new(0, 260, 0, 130)
-    Modal.Position = UDim2.new(0.5, -130, 0.5, -65)
+    Modal.Size = UDim2.new(0, 280, 0, 140)
+    Modal.Position = UDim2.new(0.5, -140, 0.5, -70)
     Modal.BackgroundColor3 = Library.Charcoal
     Modal.Parent = ModalOverlay
     
-    Instance.new("UICorner", Modal).CornerRadius = UDim.new(0, 6)
+    Instance.new("UICorner", Modal).CornerRadius = UDim.new(0, 8)
     local ms = Instance.new("UIStroke", Modal)
     ms.Color = Library.Gray
-    ms.Thickness = 1
+    ms.Thickness = 1.5
 
     local ModalText = Instance.new("TextLabel")
-    ModalText.Size = UDim2.new(1, 0, 0, 60)
+    ModalText.Size = UDim2.new(1, 0, 0, 70)
     ModalText.BackgroundTransparency = 1
     ModalText.Text = "Are you sure you want to close?"
     ModalText.TextColor3 = Library.Text
@@ -191,28 +195,28 @@ function Library:CreateWindow(title)
     ModalText.Parent = Modal
 
     local ConfirmBtn = Instance.new("TextButton")
-    ConfirmBtn.Size = UDim2.new(0, 100, 0, 35)
-    ConfirmBtn.Position = UDim2.new(0.5, 5, 1, -45)
-    ConfirmBtn.BackgroundColor3 = Color3.fromRGB(60, 20, 20)
+    ConfirmBtn.Size = UDim2.new(0, 110, 0, 38)
+    ConfirmBtn.Position = UDim2.new(0.5, 5, 1, -50)
+    ConfirmBtn.BackgroundColor3 = Color3.fromRGB(80, 30, 30)
     ConfirmBtn.Text = "Confirm"
     ConfirmBtn.TextColor3 = Library.Text
     ConfirmBtn.Font = Enum.Font.GothamBold
     ConfirmBtn.TextSize = 13
     ConfirmBtn.Parent = Modal
-    Instance.new("UICorner", ConfirmBtn).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", ConfirmBtn).CornerRadius = UDim.new(0, 5)
 
     local CancelBtn = Instance.new("TextButton")
-    CancelBtn.Size = UDim2.new(0, 100, 0, 35)
-    CancelBtn.Position = UDim2.new(0.5, -105, 1, -45)
+    CancelBtn.Size = UDim2.new(0, 110, 0, 38)
+    CancelBtn.Position = UDim2.new(0.5, -115, 1, -50)
     CancelBtn.BackgroundColor3 = Library.Gray
     CancelBtn.Text = "Cancel"
     CancelBtn.TextColor3 = Library.Text
     CancelBtn.Font = Enum.Font.GothamBold
     CancelBtn.TextSize = 13
     CancelBtn.Parent = Modal
-    Instance.new("UICorner", CancelBtn).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", CancelBtn).CornerRadius = UDim.new(0, 5)
 
-    -- Functionality: Dragging
+    -- Window Dragging Logic
     local dragging, dragInput, dragStart, startPos
     TopBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -238,50 +242,47 @@ function Library:CreateWindow(title)
         end
     end)
 
-    -- Functionality: Minimize/Restore
+    -- Minimize/Restore Logic
     local function ToggleUI(state)
         Library.Toggled = state
         if state then
             Main.Visible = true
             Reopen.Visible = false
-            Tween(Main, 0.3, {Size = UDim2.new(0, 550, 0, 380)})
+            Tween(Main, 0.4, {Size = UDim2.new(0, 550, 0, 380), BackgroundTransparency = 0})
         else
-            Tween(Main, 0.2, {Size = UDim2.new(0, 550, 0, 0)})
-            task.wait(0.2)
-            Main.Visible = false
-            Reopen.Visible = true
+            local t = Tween(Main, 0.3, {Size = UDim2.new(0, 550, 0, 0), BackgroundTransparency = 1})
+            t.Completed:Connect(function()
+                if not Library.Toggled then
+                    Main.Visible = false
+                    Reopen.Visible = true
+                end
+            end)
         end
     end
 
     Minimize.MouseButton1Click:Connect(function() ToggleUI(false) end)
     Reopen.MouseButton1Click:Connect(function() ToggleUI(true) end)
 
-    -- Functionality: Close
     Close.MouseButton1Click:Connect(function()
         ModalOverlay.Visible = true
-        Tween(ModalOverlay, 0.3, {BackgroundTransparency = 0.5})
+        Tween(ModalOverlay, 0.3, {BackgroundTransparency = 0.4})
     end)
 
     CancelBtn.MouseButton1Click:Connect(function()
-        Tween(ModalOverlay, 0.2, {BackgroundTransparency = 1})
-        task.wait(0.2)
-        ModalOverlay.Visible = false
+        local t = Tween(ModalOverlay, 0.2, {BackgroundTransparency = 1})
+        t.Completed:Connect(function() ModalOverlay.Visible = false end)
     end)
 
-    ConfirmBtn.MouseButton1Click:Connect(function()
-        SteelUI:Destroy()
-    end)
+    ConfirmBtn.MouseButton1Click:Connect(function() SteelUI:Destroy() end)
 
+    -- Toggle Hotkey
     UIS.InputBegan:Connect(function(input, gpe)
         if not gpe and input.KeyCode == Library.Keybind then
             ToggleUI(not Library.Toggled)
         end
     end)
 
-    local Window = {
-        Tabs = {},
-        CurrentTab = nil
-    }
+    local Window = { Tabs = {}, CurrentTab = nil }
 
     function Window:AddTab(name)
         local TabBtn = Instance.new("TextButton")
@@ -289,7 +290,7 @@ function Library:CreateWindow(title)
         local TabFrameLayout = Instance.new("UIListLayout")
 
         TabBtn.Name = name.."Tab"
-        TabBtn.Size = UDim2.new(1, 0, 0, 35)
+        TabBtn.Size = UDim2.new(1, 0, 0, 38)
         TabBtn.BackgroundTransparency = 1
         TabBtn.Text = name
         TabBtn.TextColor3 = Library.TextDark
@@ -301,12 +302,12 @@ function Library:CreateWindow(title)
         TabFrame.Size = UDim2.new(1, 0, 1, 0)
         TabFrame.BackgroundTransparency = 1
         TabFrame.Visible = false
-        TabFrame.ScrollBarThickness = 2
+        TabFrame.ScrollBarThickness = 1
         TabFrame.ScrollBarImageColor3 = Library.Gray
         TabFrame.Parent = Container
 
         TabFrameLayout.Parent = TabFrame
-        TabFrameLayout.Padding = UDim.new(0, 8)
+        TabFrameLayout.Padding = UDim.new(0, 12)
         TabFrameLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
         if not Window.CurrentTab then
@@ -341,7 +342,7 @@ function Library:CreateWindow(title)
             SectionFrame.BackgroundTransparency = 1
             SectionFrame.Parent = TabFrame
 
-            SectionTitle.Size = UDim2.new(1, 0, 0, 20)
+            SectionTitle.Size = UDim2.new(1, 0, 0, 22)
             SectionTitle.BackgroundTransparency = 1
             SectionTitle.Text = sname:upper()
             SectionTitle.TextColor3 = Library.Accent
@@ -351,13 +352,14 @@ function Library:CreateWindow(title)
             SectionTitle.Parent = SectionFrame
 
             SectionLayout.Parent = SectionFrame
-            SectionLayout.Padding = UDim.new(0, 5)
+            SectionLayout.Padding = UDim.new(0, 6)
             SectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
             
-            SectionLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            local function UpdateSize()
                 SectionFrame.Size = UDim2.new(1, -10, 0, SectionLayout.AbsoluteContentSize.Y)
-                TabFrame.CanvasSize = UDim2.new(0,0,0, TabFrameLayout.AbsoluteContentSize.Y)
-            end)
+                TabFrame.CanvasSize = UDim2.new(0,0,0, TabFrameLayout.AbsoluteContentSize.Y + 20)
+            end
+            SectionLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateSize)
 
             local Section = {}
 
@@ -367,15 +369,18 @@ function Library:CreateWindow(title)
                 local TBox = Instance.new("Frame")
                 local TInner = Instance.new("Frame")
                 
-                Toggle.Size = UDim2.new(1, 0, 0, 30)
+                Toggle.Size = UDim2.new(1, 0, 0, 32)
                 Toggle.BackgroundColor3 = Library.Charcoal
                 Toggle.AutoButtonColor = false
                 Toggle.Text = ""
                 Toggle.Parent = SectionFrame
-                Instance.new("UICorner", Toggle).CornerRadius = UDim.new(0, 4)
+                Instance.new("UICorner", Toggle).CornerRadius = UDim.new(0, 5)
+                local ts = Instance.new("UIStroke", Toggle)
+                ts.Color = Library.Gray
+                ts.Thickness = 1
                 
-                TTitle.Size = UDim2.new(1, -40, 1, 0)
-                TTitle.Position = UDim2.new(0, 10, 0, 0)
+                TTitle.Size = UDim2.new(1, -50, 1, 0)
+                TTitle.Position = UDim2.new(0, 12, 0, 0)
                 TTitle.BackgroundTransparency = 1
                 TTitle.Text = text
                 TTitle.TextColor3 = Library.Text
@@ -384,14 +389,14 @@ function Library:CreateWindow(title)
                 TTitle.TextXAlignment = Enum.TextXAlignment.Left
                 TTitle.Parent = Toggle
 
-                TBox.Size = UDim2.new(0, 34, 0, 18)
-                TBox.Position = UDim2.new(1, -44, 0.5, -9)
+                TBox.Size = UDim2.new(0, 36, 0, 20)
+                TBox.Position = UDim2.new(1, -48, 0.5, -10)
                 TBox.BackgroundColor3 = Library.Gray
                 TBox.Parent = Toggle
                 Instance.new("UICorner", TBox).CornerRadius = UDim.new(1, 0)
 
                 TInner.Size = UDim2.new(0, 14, 0, 14)
-                TInner.Position = default and UDim2.new(0, 18, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
+                TInner.Position = default and UDim2.new(0, 20, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
                 TInner.BackgroundColor3 = default and Library.Accent or Library.TextDark
                 TInner.Parent = TBox
                 Instance.new("UICorner", TInner).CornerRadius = UDim.new(1, 0)
@@ -399,32 +404,39 @@ function Library:CreateWindow(title)
                 local state = default
                 Toggle.MouseButton1Click:Connect(function()
                     state = not state
-                    Tween(TInner, 0.2, {
-                        Position = state and UDim2.new(0, 18, 0.5, -7) or UDim2.new(0, 2, 0.5, -7),
+                    Tween(TInner, 0.25, {
+                        Position = state and UDim2.new(0, 20, 0.5, -7) or UDim2.new(0, 2, 0.5, -7),
                         BackgroundColor3 = state and Library.Accent or Library.TextDark
                     })
                     callback(state)
                 end)
+                
+                Toggle.MouseEnter:Connect(function() Tween(ts, 0.2, {Color = Library.LightGray}) end)
+                Toggle.MouseLeave:Connect(function() Tween(ts, 0.2, {Color = Library.Gray}) end)
             end
 
             function Section:AddButton(text, callback)
                 local Button = Instance.new("TextButton")
-                Button.Size = UDim2.new(1, 0, 0, 30)
+                Button.Size = UDim2.new(1, 0, 0, 32)
                 Button.BackgroundColor3 = Library.Charcoal
                 Button.Text = text
                 Button.TextColor3 = Library.Text
                 Button.Font = Enum.Font.Gotham
                 Button.TextSize = 13
+                Button.AutoButtonColor = false
                 Button.Parent = SectionFrame
-                Instance.new("UICorner", Button).CornerRadius = UDim.new(0, 4)
+                Instance.new("UICorner", Button).CornerRadius = UDim.new(0, 5)
+                local bs = Instance.new("UIStroke", Button)
+                bs.Color = Library.Gray
+                bs.Thickness = 1
 
-                Button.MouseButton1Down:Connect(function()
-                    Tween(Button, 0.1, {BackgroundColor3 = Library.Gray})
-                end)
-                Button.MouseButton1Up:Connect(function()
+                Button.MouseButton1Down:Connect(function() Tween(Button, 0.1, {BackgroundColor3 = Library.Gray}) end)
+                Button.MouseButton1Up:Connect(function() 
                     Tween(Button, 0.1, {BackgroundColor3 = Library.Charcoal})
                     callback()
                 end)
+                Button.MouseEnter:Connect(function() Tween(bs, 0.2, {Color = Library.LightGray}) end)
+                Button.MouseLeave:Connect(function() Tween(bs, 0.2, {Color = Library.Gray}) end)
             end
 
             function Section:AddSlider(text, min, max, default, callback)
@@ -434,11 +446,11 @@ function Library:CreateWindow(title)
                 local SBar = Instance.new("TextButton")
                 local SFill = Instance.new("Frame")
 
-                Slider.Size = UDim2.new(1, 0, 0, 45)
+                Slider.Size = UDim2.new(1, 0, 0, 48)
                 Slider.BackgroundTransparency = 1
                 Slider.Parent = SectionFrame
 
-                STitle.Size = UDim2.new(1, 0, 0, 20)
+                STitle.Size = UDim2.new(1, 0, 0, 22)
                 STitle.BackgroundTransparency = 1
                 STitle.Text = text
                 STitle.TextColor3 = Library.Text
@@ -447,7 +459,7 @@ function Library:CreateWindow(title)
                 STitle.TextXAlignment = Enum.TextXAlignment.Left
                 STitle.Parent = Slider
 
-                SVal.Size = UDim2.new(1, 0, 0, 20)
+                SVal.Size = UDim2.new(1, 0, 0, 22)
                 SVal.BackgroundTransparency = 1
                 SVal.Text = tostring(default)
                 SVal.TextColor3 = Library.TextDark
@@ -457,7 +469,7 @@ function Library:CreateWindow(title)
                 SVal.Parent = Slider
 
                 SBar.Size = UDim2.new(1, 0, 0, 6)
-                SBar.Position = UDim2.new(0, 0, 0, 28)
+                SBar.Position = UDim2.new(0, 0, 0, 32)
                 SBar.BackgroundColor3 = Library.Charcoal
                 SBar.AutoButtonColor = false
                 SBar.Text = ""
@@ -486,8 +498,7 @@ function Library:CreateWindow(title)
                 SBar.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
                         sliding = true
-                        dragging = false -- Prevent UI move
-                        move()
+                        dragging = false 
                     end
                 end)
                 UIS.InputEnded:Connect(function(input)
@@ -510,19 +521,22 @@ function Library:CreateWindow(title)
                 local DList = Instance.new("Frame")
                 local DLay = Instance.new("UIListLayout")
 
-                Dropdown.Size = UDim2.new(1, 0, 0, 30)
+                Dropdown.Size = UDim2.new(1, 0, 0, 32)
                 Dropdown.BackgroundColor3 = Library.Charcoal
                 Dropdown.ClipsDescendants = true
                 Dropdown.Parent = SectionFrame
-                Instance.new("UICorner", Dropdown).CornerRadius = UDim.new(0, 4)
+                Instance.new("UICorner", Dropdown).CornerRadius = UDim.new(0, 5)
+                local ds = Instance.new("UIStroke", Dropdown)
+                ds.Color = Library.Gray
+                ds.Thickness = 1
 
-                DBtn.Size = UDim2.new(1, 0, 0, 30)
+                DBtn.Size = UDim2.new(1, 0, 0, 32)
                 DBtn.BackgroundTransparency = 1
                 DBtn.Text = ""
                 DBtn.Parent = Dropdown
 
-                DTitle.Size = UDim2.new(0, 100, 1, 0)
-                DTitle.Position = UDim2.new(0, 10, 0, 0)
+                DTitle.Size = UDim2.new(0, 120, 1, 0)
+                DTitle.Position = UDim2.new(0, 12, 0, 0)
                 DTitle.BackgroundTransparency = 1
                 DTitle.Text = text
                 DTitle.TextColor3 = Library.Text
@@ -531,7 +545,7 @@ function Library:CreateWindow(title)
                 DTitle.TextXAlignment = Enum.TextXAlignment.Left
                 DTitle.Parent = Dropdown
 
-                DVal.Size = UDim2.new(1, -20, 1, 0)
+                DVal.Size = UDim2.new(1, -25, 1, 0)
                 DVal.BackgroundTransparency = 1
                 DVal.Text = "..."
                 DVal.TextColor3 = Library.TextDark
@@ -541,7 +555,7 @@ function Library:CreateWindow(title)
                 DVal.Parent = Dropdown
 
                 DList.Size = UDim2.new(1, 0, 0, 0)
-                DList.Position = UDim2.new(0, 0, 0, 30)
+                DList.Position = UDim2.new(0, 0, 0, 32)
                 DList.BackgroundTransparency = 1
                 DList.Parent = Dropdown
 
@@ -551,13 +565,13 @@ function Library:CreateWindow(title)
                 local open = false
                 DBtn.MouseButton1Click:Connect(function()
                     open = not open
-                    local targetY = open and (30 + DLay.AbsoluteContentSize.Y) or 30
-                    Tween(Dropdown, 0.2, {Size = UDim2.new(1, 0, 0, targetY)})
+                    local targetY = open and (32 + DLay.AbsoluteContentSize.Y + 5) or 32
+                    Tween(Dropdown, 0.3, {Size = UDim2.new(1, 0, 0, targetY)})
                 end)
 
                 for _, v in pairs(list) do
                     local Opt = Instance.new("TextButton")
-                    Opt.Size = UDim2.new(1, 0, 0, 25)
+                    Opt.Size = UDim2.new(1, 0, 0, 28)
                     Opt.BackgroundTransparency = 1
                     Opt.Text = v
                     Opt.TextColor3 = Library.TextDark
@@ -568,10 +582,15 @@ function Library:CreateWindow(title)
                     Opt.MouseButton1Click:Connect(function()
                         DVal.Text = v
                         open = false
-                        Tween(Dropdown, 0.2, {Size = UDim2.new(1, 0, 0, 30)})
+                        Tween(Dropdown, 0.2, {Size = UDim2.new(1, 0, 0, 32)})
                         callback(v)
                     end)
+                    Opt.MouseEnter:Connect(function() Opt.TextColor3 = Library.Text end)
+                    Opt.MouseLeave:Connect(function() Opt.TextColor3 = Library.TextDark end)
                 end
+                
+                Dropdown.MouseEnter:Connect(function() Tween(ds, 0.2, {Color = Library.LightGray}) end)
+                Dropdown.MouseLeave:Connect(function() Tween(ds, 0.2, {Color = Library.Gray}) end)
             end
 
             function Section:AddKeybind(text, default, callback)
@@ -579,13 +598,16 @@ function Library:CreateWindow(title)
                 local KTitle = Instance.new("TextLabel")
                 local KBtn = Instance.new("TextButton")
 
-                Keybind.Size = UDim2.new(1, 0, 0, 30)
+                Keybind.Size = UDim2.new(1, 0, 0, 32)
                 Keybind.BackgroundColor3 = Library.Charcoal
                 Keybind.Parent = SectionFrame
-                Instance.new("UICorner", Keybind).CornerRadius = UDim.new(0, 4)
+                Instance.new("UICorner", Keybind).CornerRadius = UDim.new(0, 5)
+                local ks = Instance.new("UIStroke", Keybind)
+                ks.Color = Library.Gray
+                ks.Thickness = 1
 
-                KTitle.Size = UDim2.new(0, 100, 1, 0)
-                KTitle.Position = UDim2.new(0, 10, 0, 0)
+                KTitle.Size = UDim2.new(0, 120, 1, 0)
+                KTitle.Position = UDim2.new(0, 12, 0, 0)
                 KTitle.BackgroundTransparency = 1
                 KTitle.Text = text
                 KTitle.TextColor3 = Library.Text
@@ -594,8 +616,8 @@ function Library:CreateWindow(title)
                 KTitle.TextXAlignment = Enum.TextXAlignment.Left
                 KTitle.Parent = Keybind
 
-                KBtn.Size = UDim2.new(0, 60, 0, 20)
-                KBtn.Position = UDim2.new(1, -70, 0.5, -10)
+                KBtn.Size = UDim2.new(0, 70, 0, 22)
+                KBtn.Position = UDim2.new(1, -82, 0.5, -11)
                 KBtn.BackgroundColor3 = Library.Gray
                 KBtn.Text = default.Name
                 KBtn.TextColor3 = Library.Text
@@ -612,15 +634,28 @@ function Library:CreateWindow(title)
                     KBtn.Text = "..."
                 end)
 
-                UIS.InputBegan:Connect(function(input)
+                UIS.InputBegan:Connect(function(input, gpe)
                     if binding and input.UserInputType == Enum.UserInputType.Keyboard then
                         binding = false
                         current = input.KeyCode
                         KBtn.Text = current.Name
-                    elseif not binding and input.KeyCode == current then
+                    elseif not gpe and not binding and input.KeyCode == current then
                         callback()
                     end
                 end)
+            end
+
+            function Section:AddLabel(text)
+                local Label = Instance.new("TextLabel")
+                Label.Size = UDim2.new(1, 0, 0, 20)
+                Label.BackgroundTransparency = 1
+                Label.Text = text
+                Label.TextColor3 = Library.TextDark
+                Label.Font = Enum.Font.Gotham
+                Label.TextSize = 12
+                Label.TextXAlignment = Enum.TextXAlignment.Left
+                Label.Parent = SectionFrame
+                UpdateSize()
             end
 
             return Section
