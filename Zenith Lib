@@ -216,16 +216,15 @@ function Library:CreateWindow(title)
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Parent = TopBar
 
-    -- TopBar Buttons Container
     local ButtonHolder = Instance.new("Frame")
-    ButtonHolder.Size = UDim2.new(0, 80, 1, 0)
-    ButtonHolder.Position = UDim2.new(1, -85, 0, 0)
+    ButtonHolder.Size = UDim2.new(0, 70, 1, 0)
+    ButtonHolder.Position = UDim2.new(1, -75, 0, 0)
     ButtonHolder.BackgroundTransparency = 1
     ButtonHolder.Parent = TopBar
 
     local Close = Instance.new("TextButton")
-    Close.Size = UDim2.new(0, 35, 0, 35)
-    Close.Position = UDim2.new(1, -35, 0.5, -17)
+    Close.Size = UDim2.new(0, 30, 0, 30)
+    Close.Position = UDim2.new(1, -30, 0.5, -15)
     Close.BackgroundTransparency = 1
     Close.Text = "×"
     Close.TextColor3 = Library.TextDark
@@ -234,8 +233,8 @@ function Library:CreateWindow(title)
     Close.Parent = ButtonHolder
 
     local MinimizeBtn = Instance.new("TextButton")
-    MinimizeBtn.Size = UDim2.new(0, 35, 0, 35)
-    MinimizeBtn.Position = UDim2.new(0, 0, 0.5, -17)
+    MinimizeBtn.Size = UDim2.new(0, 30, 0, 30)
+    MinimizeBtn.Position = UDim2.new(0, 0, 0.5, -15)
     MinimizeBtn.BackgroundTransparency = 1
     MinimizeBtn.Text = "-"
     MinimizeBtn.TextColor3 = Library.TextDark
@@ -243,23 +242,23 @@ function Library:CreateWindow(title)
     MinimizeBtn.TextSize = 22
     MinimizeBtn.Parent = ButtonHolder
 
-    -- Draggable Floating Minimize Button
     local FloatingMin = Instance.new("TextButton")
     FloatingMin.Name = "FloatingMinimize"
-    FloatingMin.Size = UDim2.new(0, 50, 0, 50)
+    FloatingMin.Size = UDim2.new(0, 45, 0, 45)
     FloatingMin.Position = UDim2.new(0.9, 0, 0.9, 0)
-    FloatingMin.BackgroundColor3 = Library.Black
+    FloatingMin.BackgroundColor3 = Library.Charcoal
     FloatingMin.BorderSizePixel = 0
     FloatingMin.Text = "-"
-    FloatingMin.TextColor3 = Library.Accent
+    FloatingMin.TextColor3 = Color3.fromRGB(255, 255, 255)
     FloatingMin.Font = Enum.Font.GothamBold
-    FloatingMin.TextSize = 25
+    FloatingMin.TextSize = 24
     FloatingMin.Visible = false
     FloatingMin.Parent = SteelUI
+    
     Instance.new("UICorner", FloatingMin).CornerRadius = UDim.new(1, 0)
     local fs = Instance.new("UIStroke", FloatingMin)
     fs.Color = Library.Gray
-    fs.Thickness = 1.5
+    fs.Thickness = 2
 
     local function ToggleUI()
         Library.Toggled = not Library.Toggled
@@ -302,17 +301,47 @@ function Library:CreateWindow(title)
 
     local Window = { CurrentTab = nil }
 
-    function Window:AddTab(name)
+    function Window:AddTab(name, icon)
         local TabBtn = Instance.new("TextButton")
         TabBtn.Size = UDim2.new(0.9, 0, 0, 35)
         TabBtn.BackgroundColor3 = Library.Black
         TabBtn.BackgroundTransparency = 1
-        TabBtn.Text = name
-        TabBtn.TextColor3 = Library.TextDark
-        TabBtn.Font = Enum.Font.Gotham
-        TabBtn.TextSize = 13
+        TabBtn.Text = ""
+        TabBtn.AutoButtonColor = false
         TabBtn.Parent = TabList
         Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 4)
+
+        local TabContent = Instance.new("Frame")
+        TabContent.Size = UDim2.new(1, 0, 1, 0)
+        TabContent.BackgroundTransparency = 1
+        TabContent.Parent = TabBtn
+
+        local tcLayout = Instance.new("UIListLayout", TabContent)
+        tcLayout.FillDirection = Enum.FillDirection.Horizontal
+        tcLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+        tcLayout.Padding = UDim.new(0, 8)
+        
+        local Padding = Instance.new("UIPadding", TabContent)
+        Padding.PaddingLeft = UDim.new(0, 10)
+
+        if icon then
+            local IconImg = Instance.new("ImageLabel")
+            IconImg.Size = UDim2.new(0, 18, 0, 18)
+            IconImg.BackgroundTransparency = 1
+            IconImg.Image = icon:find("rbxassetid://") and icon or "rbxassetid://" .. icon
+            IconImg.ImageColor3 = Library.TextDark
+            IconImg.Parent = TabContent
+        end
+
+        local TabLabel = Instance.new("TextLabel")
+        TabLabel.Size = UDim2.new(0.8, 0, 1, 0)
+        TabLabel.BackgroundTransparency = 1
+        TabLabel.Text = name
+        TabLabel.TextColor3 = Library.TextDark
+        TabLabel.Font = Enum.Font.Gotham
+        TabLabel.TextSize = 13
+        TabLabel.TextXAlignment = Enum.TextXAlignment.Left
+        TabLabel.Parent = TabContent
 
         local TabFrame = Instance.new("ScrollingFrame")
         TabFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -330,7 +359,10 @@ function Library:CreateWindow(title)
             Window.CurrentTab = TabFrame
             TabFrame.Visible = true
             TabBtn.BackgroundTransparency = 0
-            TabBtn.TextColor3 = Library.Text
+            TabLabel.TextColor3 = Library.Text
+            if TabContent:FindFirstChildOfClass("ImageLabel") then
+                TabContent:FindFirstChildOfClass("ImageLabel").ImageColor3 = Library.Accent
+            end
         end
 
         TabBtn.MouseButton1Click:Connect(function()
@@ -338,12 +370,21 @@ function Library:CreateWindow(title)
             for _, v in pairs(TabList:GetChildren()) do
                 if v:IsA("TextButton") then
                     v.BackgroundTransparency = 1
-                    v.TextColor3 = Library.TextDark
+                    local content = v:FindFirstChild("Frame")
+                    if content then
+                        local lbl = content:FindFirstChildOfClass("TextLabel")
+                        local img = content:FindFirstChildOfClass("ImageLabel")
+                        if lbl then lbl.TextColor3 = Library.TextDark end
+                        if img then img.ImageColor3 = Library.TextDark end
+                    end
                 end
             end
             TabFrame.Visible = true
             TabBtn.BackgroundTransparency = 0
-            TabBtn.TextColor3 = Library.Text
+            TabLabel.TextColor3 = Library.Text
+            if TabContent:FindFirstChildOfClass("ImageLabel") then
+                TabContent:FindFirstChildOfClass("ImageLabel").ImageColor3 = Library.Accent
+            end
         end)
 
         local Tab = {}
@@ -495,59 +536,154 @@ function Library:CreateWindow(title)
 
             function Section:AddDropdown(text, list, callback)
                 local Dropdown = Instance.new("Frame")
-                Dropdown.Size = UDim2.new(1, 0, 0, 32)
+                Dropdown.Name = text .. "Dropdown"
+                Dropdown.Size = UDim2.new(1, 0, 0, 36)
                 Dropdown.BackgroundColor3 = Library.Charcoal
                 Dropdown.ClipsDescendants = true
                 Dropdown.Parent = SectionFrame
-                Instance.new("UICorner", Dropdown).CornerRadius = UDim.new(0, 4)
+                Instance.new("UICorner", Dropdown).CornerRadius = UDim.new(0, 5)
+                local ds = Instance.new("UIStroke", Dropdown)
+                ds.Color = Library.Gray
+                ds.Thickness = 1
                 
-                local DBtn = Instance.new("TextButton")
-                DBtn.Size = UDim2.new(1, 0, 0, 32)
-                DBtn.BackgroundTransparency = 1
-                DBtn.Text = ""
-                DBtn.Parent = Dropdown
+                local Header = Instance.new("TextButton")
+                Header.Size = UDim2.new(1, 0, 0, 36)
+                Header.BackgroundTransparency = 1
+                Header.Text = ""
+                Header.AutoButtonColor = false
+                Header.Parent = Dropdown
 
                 local Title = Instance.new("TextLabel")
-                Title.Size = UDim2.new(1, -20, 1, 0)
-                Title.Position = UDim2.new(0, 10, 0, 0)
+                Title.Size = UDim2.new(1, -40, 1, 0)
+                Title.Position = UDim2.new(0, 12, 0, 0)
                 Title.BackgroundTransparency = 1
-                Title.Text = text .. " : ..."
+                Title.Text = text
                 Title.TextColor3 = Library.Text
                 Title.Font = Enum.Font.Gotham
                 Title.TextSize = 13
                 Title.TextXAlignment = Enum.TextXAlignment.Left
-                Title.Parent = Dropdown
+                Title.Parent = Header
 
-                local ListFrame = Instance.new("Frame")
-                ListFrame.Size = UDim2.new(1, 0, 0, 0)
-                ListFrame.Position = UDim2.new(0, 0, 0, 32)
-                ListFrame.BackgroundTransparency = 1
-                ListFrame.Parent = Dropdown
+                local SelectedLabel = Instance.new("TextLabel")
+                SelectedLabel.Size = UDim2.new(1, -65, 1, 0)
+                SelectedLabel.Position = UDim2.new(0, 10, 0, 0)
+                SelectedLabel.BackgroundTransparency = 1
+                SelectedLabel.Text = "None"
+                SelectedLabel.TextColor3 = Library.TextDark
+                SelectedLabel.Font = Enum.Font.Gotham
+                SelectedLabel.TextSize = 12
+                SelectedLabel.TextXAlignment = Enum.TextXAlignment.Right
+                SelectedLabel.Parent = Header
 
-                local ll = Instance.new("UIListLayout", ListFrame)
+                local Icon = Instance.new("TextLabel")
+                Icon.Size = UDim2.new(0, 36, 0, 36)
+                Icon.Position = UDim2.new(1, -36, 0, 0)
+                Icon.BackgroundTransparency = 1
+                Icon.Text = "v"
+                Icon.TextColor3 = Library.TextDark
+                Icon.Font = Enum.Font.Gotham
+                Icon.TextSize = 12
+                Icon.Parent = Header
+
+                local OptionHolder = Instance.new("Frame")
+                OptionHolder.Size = UDim2.new(1, -8, 0, 0)
+                OptionHolder.Position = UDim2.new(0, 4, 0, 36)
+                OptionHolder.BackgroundTransparency = 1
+                OptionHolder.ClipsDescendants = true
+                OptionHolder.Parent = Dropdown
+
+                local ol = Instance.new("UIListLayout", OptionHolder)
+                ol.Padding = UDim.new(0, 4)
+                ol.HorizontalAlignment = Enum.HorizontalAlignment.Center
                 
                 local open = false
-                DBtn.MouseButton1Click:Connect(function()
+                local function ToggleDropdown()
                     open = not open
-                    Tween(Dropdown, 0.3, {Size = UDim2.new(1, 0, 0, open and (32 + ll.AbsoluteContentSize.Y + 5) or 32)})
-                end)
-
-                for _, v in pairs(list) do
-                    local Opt = Instance.new("TextButton")
-                    Opt.Size = UDim2.new(1, 0, 0, 25)
-                    Opt.BackgroundTransparency = 1
-                    Opt.Text = v
-                    Opt.TextColor3 = Library.TextDark
-                    Opt.Font = Enum.Font.Gotham
-                    Opt.TextSize = 12
-                    Opt.Parent = ListFrame
-                    Opt.MouseButton1Click:Connect(function()
-                        Title.Text = text .. " : " .. v
-                        open = false
-                        Tween(Dropdown, 0.2, {Size = UDim2.new(1, 0, 0, 32)})
-                        pcall(callback, v)
+                    Tween(Icon, 0.2, {Rotation = open and 180 or 0})
+                    Tween(ds, 0.2, {Color = open and Library.Accent or Library.Gray})
+                    local targetSize = open and (42 + ol.AbsoluteContentSize.Y + 6) or 36
+                    Tween(Dropdown, 0.3, {Size = UDim2.new(1, 0, 0, targetSize)})
+                    
+                    -- Trigger parent layout updates
+                    task.spawn(function()
+                        local t = 0
+                        while t < 0.35 do
+                            UpdateSize()
+                            t = t + task.wait()
+                        end
                     end)
                 end
+
+                Header.MouseButton1Click:Connect(ToggleDropdown)
+
+                local DropdownFuncs = {}
+
+                function DropdownFuncs:Refresh(newList)
+                    for _, v in pairs(OptionHolder:GetChildren()) do
+                        if v:IsA("TextButton") then v:Destroy() end
+                    end
+                    
+                    for _, v in pairs(newList) do
+                        local Opt = Instance.new("TextButton")
+                        Opt.Size = UDim2.new(1, 0, 0, 28)
+                        Opt.BackgroundColor3 = Library.Black
+                        Opt.BackgroundTransparency = 0.8
+                        Opt.Text = ""
+                        Opt.AutoButtonColor = false
+                        Opt.Parent = OptionHolder
+                        Instance.new("UICorner", Opt).CornerRadius = UDim.new(0, 4)
+                        
+                        local olbl = Instance.new("TextLabel")
+                        olbl.Size = UDim2.new(1, -10, 1, 0)
+                        olbl.Position = UDim2.new(0, 10, 0, 0)
+                        olbl.BackgroundTransparency = 1
+                        olbl.Text = v
+                        olbl.TextColor3 = Library.TextDark
+                        olbl.Font = Enum.Font.Gotham
+                        olbl.TextSize = 12
+                        olbl.TextXAlignment = Enum.TextXAlignment.Left
+                        olbl.Parent = Opt
+
+                        Opt.MouseEnter:Connect(function()
+                            Tween(Opt, 0.2, {BackgroundTransparency = 0.6})
+                            Tween(olbl, 0.2, {TextColor3 = Library.Text})
+                        end)
+                        Opt.MouseLeave:Connect(function()
+                            if SelectedLabel.Text ~= v then
+                                Tween(Opt, 0.2, {BackgroundTransparency = 0.8})
+                                Tween(olbl, 0.2, {TextColor3 = Library.TextDark})
+                            end
+                        end)
+
+                        Opt.MouseButton1Click:Connect(function()
+                            SelectedLabel.Text = v
+                            ToggleDropdown()
+                            pcall(callback, v)
+                            for _, child in pairs(OptionHolder:GetChildren()) do
+                                if child:IsA("TextButton") then
+                                    local l = child:FindFirstChildOfClass("TextLabel")
+                                    if l then l.TextColor3 = Library.TextDark end
+                                    child.BackgroundTransparency = 0.8
+                                end
+                            end
+                            olbl.TextColor3 = Library.Accent
+                            Opt.BackgroundTransparency = 0.4
+                        end)
+                    end
+                    
+                    if open then
+                        Dropdown.Size = UDim2.new(1, 0, 0, 42 + ol.AbsoluteContentSize.Y + 6)
+                        UpdateSize()
+                    end
+                end
+
+                function DropdownFuncs:Set(val)
+                    SelectedLabel.Text = val
+                    pcall(callback, val)
+                end
+
+                DropdownFuncs:Refresh(list)
+                return DropdownFuncs
             end
 
             function Section:AddKeybind(text, default, callback)
