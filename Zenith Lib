@@ -49,11 +49,13 @@ function Library:CreateWindow(title)
     local MainCorner = Instance.new("UICorner")
     local MainStroke = Instance.new("UIStroke")
     local TopBar = Instance.new("Frame")
+    local TopBarCorner = Instance.new("UICorner") -- Added for clipping fix
     local Title = Instance.new("TextLabel")
     local Buttons = Instance.new("Frame")
     local Minimize = Instance.new("TextButton")
     local Close = Instance.new("TextButton")
     local Sidebar = Instance.new("Frame")
+    local SidebarCorner = Instance.new("UICorner") -- Added for clipping fix
     local Container = Instance.new("Frame")
     local TabList = Instance.new("ScrollingFrame")
     local TabListLayout = Instance.new("UIListLayout")
@@ -89,10 +91,10 @@ function Library:CreateWindow(title)
     Main.ClipsDescendants = true
     Main.Parent = SteelUI
 
-    MainCorner.CornerRadius = UDim.new(0, 6)
+    MainCorner.CornerRadius = UDim.new(0, 8) -- Slightly increased for smoother look
     MainCorner.Parent = Main
     MainStroke.Color = Library.Gray
-    MainStroke.Thickness = 1
+    MainStroke.Thickness = 1.2
     MainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     MainStroke.Parent = Main
 
@@ -100,7 +102,20 @@ function Library:CreateWindow(title)
     TopBar.Size = UDim2.new(1, 0, 0, 38)
     TopBar.BackgroundColor3 = Library.Charcoal
     TopBar.BorderSizePixel = 0
+    TopBar.ZIndex = 2
     TopBar.Parent = Main
+
+    TopBarCorner.CornerRadius = UDim.new(0, 8)
+    TopBarCorner.Parent = TopBar
+    
+    -- Square off the bottom of the TopBar so it doesn't show gaps
+    local TopBarFiller = Instance.new("Frame")
+    TopBarFiller.Size = UDim2.new(1, 0, 0, 10)
+    TopBarFiller.Position = UDim2.new(0, 0, 1, -10)
+    TopBarFiller.BackgroundColor3 = Library.Charcoal
+    TopBarFiller.BorderSizePixel = 0
+    TopBarFiller.ZIndex = 1
+    TopBarFiller.Parent = TopBar
 
     Title.Name = "Title"
     Title.Size = UDim2.new(0, 250, 1, 0)
@@ -111,12 +126,14 @@ function Library:CreateWindow(title)
     Title.Font = Enum.Font.GothamBold
     Title.TextSize = 13
     Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.ZIndex = 3
     Title.Parent = TopBar
 
     Buttons.Name = "Buttons"
     Buttons.Size = UDim2.new(0, 80, 1, 0)
     Buttons.Position = UDim2.new(1, -80, 0, 0)
     Buttons.BackgroundTransparency = 1
+    Buttons.ZIndex = 3
     Buttons.Parent = TopBar
 
     Close.Name = "Close"
@@ -145,6 +162,16 @@ function Library:CreateWindow(title)
     Sidebar.BackgroundColor3 = Library.Charcoal
     Sidebar.BorderSizePixel = 0
     Sidebar.Parent = Main
+
+    SidebarCorner.CornerRadius = UDim.new(0, 8)
+    SidebarCorner.Parent = Sidebar
+    
+    -- Square off the top and right of Sidebar
+    local SidebarFiller = Instance.new("Frame")
+    SidebarFiller.Size = UDim2.new(1, 10, 0.5, 0)
+    SidebarFiller.BackgroundColor3 = Library.Charcoal
+    SidebarFiller.BorderSizePixel = 0
+    SidebarFiller.Parent = Sidebar
 
     TabList.Name = "TabList"
     TabList.Size = UDim2.new(1, 0, 1, -10)
