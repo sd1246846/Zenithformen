@@ -41,6 +41,26 @@ local function Tween(obj, time, prop)
     return t
 end
 
+local function MakeDraggable(obj, dragPart)
+    local dragging, dragInput, dragStart, startPos
+    dragPart.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = obj.Position
+        end
+    end)
+    UIS.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            obj.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+    UIS.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+    end)
+end
+
 -- Built-in Key System
 function Library:InitKeySystem(config)
     local config = config or {}
@@ -196,15 +216,63 @@ function Library:CreateWindow(title)
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Parent = TopBar
 
+    -- TopBar Buttons Container
+    local ButtonHolder = Instance.new("Frame")
+    ButtonHolder.Size = UDim2.new(0, 80, 1, 0)
+    ButtonHolder.Position = UDim2.new(1, -85, 0, 0)
+    ButtonHolder.BackgroundTransparency = 1
+    ButtonHolder.Parent = TopBar
+
     local Close = Instance.new("TextButton")
-    Close.Size = UDim2.new(0, 40, 0, 40)
-    Close.Position = UDim2.new(1, -40, 0, 0)
+    Close.Size = UDim2.new(0, 35, 0, 35)
+    Close.Position = UDim2.new(1, -35, 0.5, -17)
     Close.BackgroundTransparency = 1
     Close.Text = "×"
     Close.TextColor3 = Library.TextDark
     Close.Font = Enum.Font.Gotham
     Close.TextSize = 22
-    Close.Parent = TopBar
+    Close.Parent = ButtonHolder
+
+    local MinimizeBtn = Instance.new("TextButton")
+    MinimizeBtn.Size = UDim2.new(0, 35, 0, 35)
+    MinimizeBtn.Position = UDim2.new(0, 0, 0.5, -17)
+    MinimizeBtn.BackgroundTransparency = 1
+    MinimizeBtn.Text = "-"
+    MinimizeBtn.TextColor3 = Library.TextDark
+    MinimizeBtn.Font = Enum.Font.Gotham
+    MinimizeBtn.TextSize = 22
+    MinimizeBtn.Parent = ButtonHolder
+
+    -- Draggable Floating Minimize Button
+    local FloatingMin = Instance.new("TextButton")
+    FloatingMin.Name = "FloatingMinimize"
+    FloatingMin.Size = UDim2.new(0, 50, 0, 50)
+    FloatingMin.Position = UDim2.new(0.9, 0, 0.9, 0)
+    FloatingMin.BackgroundColor3 = Library.Black
+    FloatingMin.BorderSizePixel = 0
+    FloatingMin.Text = "-"
+    FloatingMin.TextColor3 = Library.Accent
+    FloatingMin.Font = Enum.Font.GothamBold
+    FloatingMin.TextSize = 25
+    FloatingMin.Visible = false
+    FloatingMin.Parent = SteelUI
+    Instance.new("UICorner", FloatingMin).CornerRadius = UDim.new(1, 0)
+    local fs = Instance.new("UIStroke", FloatingMin)
+    fs.Color = Library.Gray
+    fs.Thickness = 1.5
+
+    local function ToggleUI()
+        Library.Toggled = not Library.Toggled
+        Main.Visible = Library.Toggled
+        FloatingMin.Visible = not Library.Toggled
+    end
+
+    MinimizeBtn.MouseButton1Click:Connect(ToggleUI)
+    FloatingMin.MouseButton1Click:Connect(ToggleUI)
+    MakeDraggable(FloatingMin, FloatingMin)
+    MakeDraggable(Main, TopBar)
+
+    Close.MouseButton1Click:Connect(function() SteelUI:Destroy() end)
 
     local Sidebar = Instance.new("Frame")
     Sidebar.Name = "Sidebar"
@@ -231,27 +299,6 @@ function Library:CreateWindow(title)
     Container.Position = UDim2.new(0, 170, 0, 50)
     Container.BackgroundTransparency = 1
     Container.Parent = Main
-
-    -- Dragging Logic
-    local dragging, dragInput, dragStart, startPos
-    TopBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = Main.Position
-        end
-    end)
-    UIS.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
-            Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-    UIS.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
-    end)
-
-    Close.MouseButton1Click:Connect(function() SteelUI:Destroy() end)
 
     local Window = { CurrentTab = nil }
 
@@ -341,7 +388,6 @@ function Library:CreateWindow(title)
                 Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4)
                 local s = Instance.new("UIStroke", Btn)
                 s.Color = Library.Gray
-                
                 Btn.MouseButton1Click:Connect(function() pcall(callback) end)
             end
 
@@ -550,6 +596,18 @@ function Library:CreateWindow(title)
                         pcall(callback)
                     end
                 end)
+            end
+            
+            function Section:AddLabel(text)
+                local Label = Instance.new("TextLabel")
+                Label.Size = UDim2.new(1, 0, 0, 20)
+                Label.BackgroundTransparency = 1
+                Label.Text = text
+                Label.TextColor3 = Library.TextDark
+                Label.Font = Enum.Font.Gotham
+                Label.TextSize = 12
+                Label.TextXAlignment = Enum.TextXAlignment.Left
+                Label.Parent = SectionFrame
             end
 
             return Section
