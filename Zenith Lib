@@ -1,54 +1,100 @@
 local Zenith = { Connections = {} }
-local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
 
+-- Cleanup existing UI
 if CoreGui:FindFirstChild("Zenith_Elite") then CoreGui:FindFirstChild("Zenith_Elite"):Destroy() end
 if CoreGui:FindFirstChild("Zenith_Restore") then CoreGui:FindFirstChild("Zenith_Restore"):Destroy() end
 
-function Zenith:CreateWindow(title)
+function Zenith:CreateWindow(config)
+    local title = config.Title or "ZENITH"
+    local reopenText = config.ReopenText or "OPEN"
+    local useKeySystem = config.KeySystem or false
+    local keySettings = config.KeySettings or {}
+    
     local UI = Instance.new("ScreenGui", CoreGui); UI.Name = "Zenith_Elite"
     local RestoreUI = Instance.new("ScreenGui", CoreGui); RestoreUI.Name = "Zenith_Restore"; RestoreUI.Enabled = false
     
+    -- Main Frame
     local Main = Instance.new("Frame", UI)
     Main.Size = UDim2.new(0, 480, 0, 340); Main.Position = UDim2.new(0.5, -240, 0.5, -170)
-    Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Main.BorderSizePixel = 0
+    Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Main.Visible = not useKeySystem
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 4)
     Instance.new("UIStroke", Main).Color = Color3.fromRGB(40, 40, 40)
     
-    local Header = Instance.new("Frame", Main)
-    Header.Size = UDim2.new(1, 0, 0, 30); Header.BackgroundColor3 = Color3.fromRGB(22, 22, 22); Header.BorderSizePixel = 0
-    Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 4)
+    -- Universal Dragging Function
+    local function makeDraggable(frame, trigger)
+        local dragging, dragStart, startPos
+        trigger.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true; dragStart = input.Position; startPos = frame.Position
+                input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+            end
+        end)
+        UserInputService.InputChanged:Connect(function(input)
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                local delta = input.Position - dragStart
+                frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            end
+        end)
+    end
+
+    -- [[ KEY SYSTEM ]]
+    if useKeySystem then
+        local KeyFrame = Instance.new("Frame", UI)
+        KeyFrame.Size = UDim2.new(0, 320, 0, 190); KeyFrame.Position = UDim2.new(0.5, -160, 0.5, -95)
+        KeyFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Instance.new("UICorner", KeyFrame)
+        Instance.new("UIStroke", KeyFrame).Color = Color3.fromRGB(50, 50, 50)
+        makeDraggable(KeyFrame, KeyFrame)
+
+        local KTitle = Instance.new("TextLabel", KeyFrame)
+        KTitle.Size = UDim2.new(1, 0, 0, 35); KTitle.Text = (keySettings.Title or "Key System"):upper(); KTitle.Font = Enum.Font.GothamBold; KTitle.TextColor3 = Color3.fromRGB(200, 200, 200); KTitle.TextSize = 13; KTitle.BackgroundTransparency = 1
+
+        local Box = Instance.new("TextBox", KeyFrame)
+        Box.Size = UDim2.new(0.85, 0, 0, 35); Box.Position = UDim2.new(0.075, 0, 0.35, 0); Box.BackgroundColor3 = Color3.fromRGB(22, 22, 22); Box.PlaceholderText = "Enter Key Here..."; Box.Text = ""; Box.Font = Enum.Font.Gotham; Box.TextColor3 = Color3.fromRGB(255, 255, 255); Box.TextSize = 12; Instance.new("UICorner", Box)
+
+        local GetBtn = Instance.new("TextButton", KeyFrame); GetBtn.Size = UDim2.new(0.25, 0, 0, 30); GetBtn.Position = UDim2.new(0.075, 0, 0.65, 0); GetBtn.Text = "GET KEY"; GetBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); GetBtn.TextColor3 = Color3.fromRGB(180, 180, 180); GetBtn.Font = Enum.Font.GothamBold; GetBtn.TextSize = 10; Instance.new("UICorner", GetBtn)
+        local PstBtn = Instance.new("TextButton", KeyFrame); PstBtn.Size = UDim2.new(0.25, 0, 0, 30); PstBtn.Position = UDim2.new(0.375, 0, 0.65, 0); PstBtn.Text = "PASTE"; PstBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); PstBtn.TextColor3 = Color3.fromRGB(180, 180, 180); PstBtn.Font = Enum.Font.GothamBold; PstBtn.TextSize = 10; Instance.new("UICorner", PstBtn)
+        local ChkBtn = Instance.new("TextButton", KeyFrame); ChkBtn.Size = UDim2.new(0.25, 0, 0, 30); ChkBtn.Position = UDim2.new(0.675, 0, 0.65, 0); ChkBtn.Text = "CHECK"; ChkBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45); ChkBtn.TextColor3 = Color3.fromRGB(255, 255, 255); ChkBtn.Font = Enum.Font.GothamBold; ChkBtn.TextSize = 10; Instance.new("UICorner", ChkBtn)
+
+        local function validate(input)
+            local validKeys = keySettings.Key or {}
+            if keySettings.GrabKeyFromSite then
+                local s, r = pcall(function() return game:HttpGet(keySettings.Key[1]) end)
+                if s then validKeys = {r} end
+            end
+            for _, k in pairs(validKeys) do
+                if input == k then
+                    if keySettings.SaveKey then pcall(function() writefile(keySettings.FileName..".txt", input) end) end
+                    KeyFrame:Destroy(); Main.Visible = true; return true
+                end
+            end
+            Box.Text = "INVALID KEY"; task.wait(1); Box.Text = ""
+        end
+
+        GetBtn.MouseButton1Click:Connect(function() setclipboard(keySettings.Note or "") end)
+        PstBtn.MouseButton1Click:Connect(function() Box.Text = getclipboard() end)
+        ChkBtn.MouseButton1Click:Connect(function() validate(Box.Text) end)
+
+        if keySettings.SaveKey and isfile(keySettings.FileName..".txt") then
+            if validate(readfile(keySettings.FileName..".txt")) then KeyFrame:Destroy() end
+        end
+    end
+
+    -- [[ MAIN UI ELEMENTS ]]
+    local Header = Instance.new("Frame", Main); Header.Size = UDim2.new(1, 0, 0, 30); Header.BackgroundColor3 = Color3.fromRGB(22, 22, 22); Instance.new("UICorner", Header)
+    local Title = Instance.new("TextLabel", Header); Title.Size = UDim2.new(1, -90, 0.6, 0); Title.Position = UDim2.new(0, 12, 0.2, 0); Title.Text = title:upper(); Title.Font = Enum.Font.GothamBold; Title.TextColor3 = Color3.fromRGB(180, 180, 180); Title.TextScaled = true; Title.BackgroundTransparency = 1; Title.TextXAlignment = 0; Instance.new("UITextSizeConstraint", Title).MaxTextSize = 11
+
+    local MinBtn = Instance.new("TextButton", Header); MinBtn.Size = UDim2.new(0, 24, 0, 24); MinBtn.Position = UDim2.new(1, -55, 0, 3); MinBtn.Text = "−"; MinBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25); MinBtn.TextColor3 = Color3.fromRGB(150, 150, 150); Instance.new("UICorner", MinBtn)
+    local CloseBtn = Instance.new("TextButton", Header); CloseBtn.Size = UDim2.new(0, 24, 0, 24); CloseBtn.Position = UDim2.new(1, -27, 0, 3); CloseBtn.Text = "×"; CloseBtn.BackgroundColor3 = Color3.fromRGB(35, 20, 20); CloseBtn.TextColor3 = Color3.fromRGB(255, 70, 70); Instance.new("UICorner", CloseBtn)
+    makeDraggable(Main, Header)
+
+    local RestoreBtn = Instance.new("TextButton", RestoreUI); RestoreBtn.Size = UDim2.new(0, 70, 0, 30); RestoreBtn.Position = UDim2.new(0, 20, 0.5, -15); RestoreBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20); RestoreBtn.Text = reopenText:upper(); RestoreBtn.Font = Enum.Font.GothamBold; RestoreBtn.TextColor3 = Color3.fromRGB(200, 200, 200); RestoreBtn.TextSize = 10; Instance.new("UICorner", RestoreBtn); Instance.new("UIStroke", RestoreBtn).Color = Color3.fromRGB(45, 45, 45)
+    makeDraggable(RestoreBtn, RestoreBtn)
     
-    local Title = Instance.new("TextLabel", Header)
-    Title.Size = UDim2.new(1, -80, 1, 0); Title.Position = UDim2.new(0, 10, 0, 0)
-    Title.Text = title:upper(); Title.Font = Enum.Font.GothamBold; Title.TextColor3 = Color3.fromRGB(180, 180, 180); Title.TextSize = 11; Title.TextXAlignment = 0; Title.BackgroundTransparency = 1
-
-    local MinBtn = Instance.new("TextButton", Header)
-    MinBtn.Size = UDim2.new(0, 24, 0, 24); MinBtn.Position = UDim2.new(1, -55, 0, 3); MinBtn.Text = "−"; MinBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25); MinBtn.TextColor3 = Color3.fromRGB(150, 150, 150); Instance.new("UICorner", MinBtn)
-
-    local CloseBtn = Instance.new("TextButton", Header)
-    CloseBtn.Size = UDim2.new(0, 24, 0, 24); CloseBtn.Position = UDim2.new(1, -27, 0, 3); CloseBtn.Text = "×"; CloseBtn.BackgroundColor3 = Color3.fromRGB(35, 20, 20); CloseBtn.TextColor3 = Color3.fromRGB(255, 70, 70); Instance.new("UICorner", CloseBtn)
-
-    local RestoreBtn = Instance.new("TextButton", RestoreUI); RestoreBtn.Size = UDim2.new(0, 40, 0, 40); RestoreBtn.Position = UDim2.new(0, 20, 0.5, -20); RestoreBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20); RestoreBtn.Text = "Z"; RestoreBtn.Font = Enum.Font.GothamBold; RestoreBtn.TextColor3 = Color3.fromRGB(200, 200, 200); RestoreBtn.TextSize = 18; Instance.new("UICorner", RestoreBtn); Instance.new("UIStroke", RestoreBtn).Color = Color3.fromRGB(45, 45, 45)
-
-    -- Fixed Drag Logic (Only triggers on Header)
-    local drag, startPos, dragStart
-    Header.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then drag = true; dragStart = i.Position; startPos = Main.Position end end)
-    UserInputService.InputChanged:Connect(function(i) if drag and i.UserInputType == Enum.UserInputType.MouseMovement then local delta = i.Position - dragStart; Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) end end)
-    UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then drag = false end end)
-
-    MinBtn.MouseButton1Click:Connect(function() Main.Visible = false; RestoreUI.Enabled = true end)
-    RestoreBtn.MouseButton1Click:Connect(function() Main.Visible = true; RestoreUI.Enabled = false end)
-
-    local ConfirmOverlay = Instance.new("Frame", UI); ConfirmOverlay.Size = UDim2.new(1, 0, 1, 0); ConfirmOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0); ConfirmOverlay.BackgroundTransparency = 0.5; ConfirmOverlay.Visible = false; ConfirmOverlay.ZIndex = 100
-    local Box = Instance.new("Frame", ConfirmOverlay); Box.Size = UDim2.new(0, 180, 0, 90); Box.Position = UDim2.new(0.5, -90, 0.5, -45); Box.BackgroundColor3 = Color3.fromRGB(20, 20, 20); Instance.new("UICorner", Box); Instance.new("UIStroke", Box).Color = Color3.fromRGB(60, 20, 20)
-    local YesBtn = Instance.new("TextButton", Box); YesBtn.Size = UDim2.new(0, 60, 0, 25); YesBtn.Position = UDim2.new(0, 20, 0, 50); YesBtn.Text = "YES"; YesBtn.BackgroundColor3 = Color3.fromRGB(40, 10, 10); YesBtn.TextColor3 = Color3.fromRGB(255, 50, 50); Instance.new("UICorner", YesBtn)
-    local NoBtn = Instance.new("TextButton", Box); NoBtn.Size = UDim2.new(0, 60, 0, 25); NoBtn.Position = UDim2.new(1, -80, 0, 50); NoBtn.Text = "NO"; NoBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); NoBtn.TextColor3 = Color3.fromRGB(150, 150, 150); Instance.new("UICorner", NoBtn)
-
-    CloseBtn.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = true end)
-    NoBtn.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false end)
-    YesBtn.MouseButton1Click:Connect(function() UI:Destroy(); RestoreUI:Destroy() end)
+    local function toggleUI() Main.Visible = not Main.Visible; RestoreUI.Enabled = not Main.Visible end
+    MinBtn.MouseButton1Click:Connect(toggleUI); RestoreBtn.MouseButton1Click:Connect(toggleUI)
 
     local TabBar = Instance.new("Frame", Main); TabBar.Size = UDim2.new(1, -20, 0, 25); TabBar.Position = UDim2.new(0, 10, 0, 35); TabBar.BackgroundTransparency = 1
     Instance.new("UIListLayout", TabBar).FillDirection = Enum.FillDirection.Horizontal; TabBar.UIListLayout.Padding = UDim.new(0, 5)
@@ -57,7 +103,7 @@ function Zenith:CreateWindow(title)
 
     local Window = { Tabs = {} }
     function Window:AddTab(name)
-        local TabBtn = Instance.new("TextButton", TabBar); TabBtn.Size = UDim2.new(0, 80, 1, 0); TabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25); TabBtn.Text = name:upper(); TabBtn.Font = Enum.Font.GothamBold; TabBtn.TextColor3 = Color3.fromRGB(100, 100, 100); TabBtn.TextSize = 9; Instance.new("UICorner", TabBtn)
+        local TabBtn = Instance.new("TextButton", TabBar); TabBtn.Size = UDim2.new(0, 85, 1, 0); TabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25); TabBtn.Text = name:upper(); TabBtn.Font = Enum.Font.GothamBold; TabBtn.TextColor3 = Color3.fromRGB(100, 100, 100); TabBtn.TextSize = 9; Instance.new("UICorner", TabBtn)
         local Page = Instance.new("ScrollingFrame", Container); Page.Size = UDim2.new(1, 0, 1, 0); Page.BackgroundTransparency = 1; Page.Visible = false; Page.ScrollBarThickness = 0; Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
         Instance.new("UIListLayout", Page).Padding = UDim.new(0, 8)
         
@@ -71,41 +117,42 @@ function Zenith:CreateWindow(title)
         local Tab = {}
         function Tab:AddSection(sName)
             local Sec = Instance.new("Frame", Page); Sec.BackgroundColor3 = Color3.fromRGB(18, 18, 18); Sec.Size = UDim2.new(1, 0, 0, 20); Sec.AutomaticSize = Enum.AutomaticSize.Y; Instance.new("UICorner", Sec); Instance.new("UIStroke", Sec).Color = Color3.fromRGB(35, 35, 35)
-            local Sc = Instance.new("Frame", Sec); Sc.Size = UDim2.new(1, 0, 0, 0); Sc.Position = UDim2.new(0, 0, 0, 20); Sc.BackgroundTransparency = 1; Sc.AutomaticSize = Enum.AutomaticSize.Y; Instance.new("UIPadding", Sec).PaddingBottom = UDim.new(0, 5)
-            Instance.new("UIListLayout", Sc).Padding = UDim.new(0, 4); Sc.UIListLayout.HorizontalAlignment = 1
+            local Sc = Instance.new("Frame", Sec); Sc.Size = UDim2.new(1, 0, 0, 0); Sc.Position = UDim2.new(0, 0, 0, 22); Sc.BackgroundTransparency = 1; Sc.AutomaticSize = Enum.AutomaticSize.Y; Instance.new("UIPadding", Sec).PaddingBottom = UDim.new(0, 6)
+            Instance.new("UIListLayout", Sc).Padding = UDim.new(0, 5); Sc.UIListLayout.HorizontalAlignment = 1; Instance.new("UIPadding", Sc).PaddingLeft = UDim.new(0, 8); Sc.UIPadding.PaddingRight = UDim.new(0, 8)
             
+            local SHeader = Instance.new("TextLabel", Sec); SHeader.Size = UDim2.new(1, -10, 0, 20); SHeader.Position = UDim2.new(0, 10, 0, 0); SHeader.Text = sName:upper(); SHeader.Font = Enum.Font.GothamBold; SHeader.TextColor3 = Color3.fromRGB(80, 80, 80); SHeader.TextSize = 9; SHeader.BackgroundTransparency = 1; SHeader.TextXAlignment = 0
+
             local E = {}
             function E:AddButton(txt, cb)
-                local Btn = Instance.new("TextButton", Sc); Btn.Size = UDim2.new(0.96, 0, 0, 24); Btn.BackgroundColor3 = Color3.fromRGB(22, 22, 22); Btn.Text = txt; Btn.Font = Enum.Font.Gotham; Btn.TextColor3 = Color3.fromRGB(160, 160, 160); Btn.TextSize = 11; Instance.new("UICorner", Btn); Btn.MouseButton1Click:Connect(cb)
+                local Btn = Instance.new("TextButton", Sc); Btn.Size = UDim2.new(1, 0, 0, 26); Btn.BackgroundColor3 = Color3.fromRGB(22, 22, 22); Btn.Text = txt; Btn.Font = Enum.Font.Gotham; Btn.TextColor3 = Color3.fromRGB(160, 160, 160); Btn.TextSize = 11; Instance.new("UICorner", Btn); Btn.MouseButton1Click:Connect(cb)
             end
 
             function E:AddToggle(txt, def, cb)
-                local Tg = Instance.new("TextButton", Sc); Tg.Size = UDim2.new(0.96, 0, 0, 24); Tg.BackgroundColor3 = Color3.fromRGB(22, 22, 22); Tg.Text = "  " .. txt; Tg.Font = Enum.Font.Gotham; Tg.TextColor3 = Color3.fromRGB(160, 160, 160); Tg.TextSize = 11; Tg.TextXAlignment = 0; Instance.new("UICorner", Tg)
-                local Bx = Instance.new("Frame", Tg); Bx.Size = UDim2.new(0, 12, 0, 12); Bx.Position = UDim2.new(1, -18, 0.5, -6); Bx.BackgroundColor3 = def and Color3.fromRGB(150, 150, 150) or Color3.fromRGB(40, 40, 40); Instance.new("UICorner", Bx)
+                local Tg = Instance.new("TextButton", Sc); Tg.Size = UDim2.new(1, 0, 0, 26); Tg.BackgroundColor3 = Color3.fromRGB(22, 22, 22); Tg.Text = "  " .. txt; Tg.Font = Enum.Font.Gotham; Tg.TextColor3 = Color3.fromRGB(160, 160, 160); Tg.TextSize = 11; Tg.TextXAlignment = 0; Instance.new("UICorner", Tg)
+                local Bx = Instance.new("Frame", Tg); Bx.Size = UDim2.new(0, 14, 0, 14); Bx.Position = UDim2.new(1, -22, 0.5, -7); Bx.BackgroundColor3 = def and Color3.fromRGB(150, 150, 150) or Color3.fromRGB(40, 40, 40); Instance.new("UICorner", Bx)
                 local s = def; Tg.MouseButton1Click:Connect(function() s = not s; Bx.BackgroundColor3 = s and Color3.fromRGB(150, 150, 150) or Color3.fromRGB(40, 40, 40); cb(s) end)
             end
 
             function E:AddSlider(txt, min, max, def, cb)
-                local Sld = Instance.new("Frame", Sc); Sld.Size = UDim2.new(0.96, 0, 0, 32); Sld.BackgroundColor3 = Color3.fromRGB(22, 22, 22); Instance.new("UICorner", Sld)
-                local Ttl = Instance.new("TextLabel", Sld); Ttl.Position = UDim2.new(0, 8, 0, 2); Ttl.Text = txt; Ttl.Font = Enum.Font.Gotham; Ttl.TextColor3 = Color3.fromRGB(120, 120, 120); Ttl.TextSize = 10; Ttl.BackgroundTransparency = 1; Ttl.TextXAlignment = 0
-                local Val = Instance.new("TextLabel", Sld); Val.Position = UDim2.new(1, -35, 0, 2); Val.Text = tostring(def); Val.Font = Enum.Font.GothamBold; Val.TextColor3 = Color3.fromRGB(150, 150, 150); Val.TextSize = 10; Val.BackgroundTransparency = 1
-                local Bar = Instance.new("Frame", Sld); Bar.Position = UDim2.new(0, 8, 0, 22); Bar.Size = UDim2.new(1, -16, 0, 4); Bar.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Instance.new("UICorner", Bar)
+                local Sld = Instance.new("Frame", Sc); Sld.Size = UDim2.new(1, 0, 0, 36); Sld.BackgroundColor3 = Color3.fromRGB(22, 22, 22); Instance.new("UICorner", Sld)
+                local Ttl = Instance.new("TextLabel", Sld); Ttl.Position = UDim2.new(0, 10, 0, 4); Ttl.Text = txt; Ttl.Font = Enum.Font.Gotham; Ttl.TextColor3 = Color3.fromRGB(120, 120, 120); Ttl.TextSize = 10; Ttl.BackgroundTransparency = 1; Ttl.TextXAlignment = 0
+                local Val = Instance.new("TextLabel", Sld); Val.Position = UDim2.new(1, -40, 0, 4); Val.Text = tostring(def); Val.Font = Enum.Font.GothamBold; Val.TextColor3 = Color3.fromRGB(150, 150, 150); Val.TextSize = 10; Val.BackgroundTransparency = 1
+                local Bar = Instance.new("Frame", Sld); Bar.Position = UDim2.new(0, 10, 0, 24); Bar.Size = UDim2.new(1, -20, 0, 4); Bar.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Instance.new("UICorner", Bar)
                 local Fill = Instance.new("Frame", Bar); Fill.Size = UDim2.new((def - min) / (max - min), 0, 1, 0); Fill.BackgroundColor3 = Color3.fromRGB(150, 150, 150); Instance.new("UICorner", Fill)
                 
                 local sliding = false
-                Sld.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then sliding = true end end)
-                UserInputService.InputChanged:Connect(function(i) 
-                    if sliding and i.UserInputType == Enum.UserInputType.MouseMovement then
-                        local p = math.clamp((i.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
-                        local v = math.floor(min + (max - min) * p)
-                        Fill.Size = UDim2.new(p, 0, 1, 0); Val.Text = tostring(v); cb(v)
-                    end 
-                end)
-                UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then sliding = false end end)
+                local function update()
+                    local p = math.clamp((UserInputService:GetMouseLocation().X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
+                    local v = math.floor(min + (max - min) * p)
+                    Fill.Size = UDim2.new(p, 0, 1, 0); Val.Text = tostring(v); cb(v)
+                end
+                Sld.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then sliding = true update() end end)
+                UserInputService.InputChanged:Connect(function(i) if sliding and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then update() end end)
+                UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then sliding = false end end)
             end
 
             function E:AddDropdown(txt, list, cb)
-                local Dp = Instance.new("TextButton", Sc); Dp.Size = UDim2.new(0.96, 0, 0, 24); Dp.BackgroundColor3 = Color3.fromRGB(22, 22, 22); Dp.Text = "  " .. txt; Dp.Font = Enum.Font.Gotham; Dp.TextColor3 = Color3.fromRGB(160, 160, 160); Dp.TextSize = 11; Dp.TextXAlignment = 0; Instance.new("UICorner", Dp)
+                local Dp = Instance.new("TextButton", Sc); Dp.Size = UDim2.new(1, 0, 0, 26); Dp.BackgroundColor3 = Color3.fromRGB(22, 22, 22); Dp.Text = "  " .. txt; Dp.Font = Enum.Font.Gotham; Dp.TextColor3 = Color3.fromRGB(160, 160, 160); Dp.TextSize = 11; Dp.TextXAlignment = 0; Instance.new("UICorner", Dp)
                 local Ar = Instance.new("TextLabel", Dp); Ar.Size = UDim2.new(0, 24, 1, 0); Ar.Position = UDim2.new(1, -24, 0, 0); Ar.Text = "▼"; Ar.TextColor3 = Color3.fromRGB(80, 80, 80); Ar.BackgroundTransparency = 1; Ar.TextSize = 10
                 local Open = false
                 Dp.MouseButton1Click:Connect(function()
@@ -113,7 +160,7 @@ function Zenith:CreateWindow(title)
                     for _, v in pairs(Sc:GetChildren()) do if v:IsA("TextButton") and v ~= Dp and v.Name == "DPOpt" then v.Visible = Open end end
                 end)
                 for _, opt in pairs(list) do
-                    local O = Instance.new("TextButton", Sc); O.Name = "DPOpt"; O.Size = UDim2.new(0.9, 0, 0, 20); O.BackgroundColor3 = Color3.fromRGB(28, 28, 28); O.Text = opt; O.Font = Enum.Font.Gotham; O.TextColor3 = Color3.fromRGB(130, 130, 130); O.TextSize = 10; O.Visible = false; Instance.new("UICorner", O)
+                    local O = Instance.new("TextButton", Sc); O.Name = "DPOpt"; O.Size = UDim2.new(0.95, 0, 0, 22); O.BackgroundColor3 = Color3.fromRGB(28, 28, 28); O.Text = opt; O.Font = Enum.Font.Gotham; O.TextColor3 = Color3.fromRGB(130, 130, 130); O.TextSize = 10; O.Visible = false; Instance.new("UICorner", O)
                     O.MouseButton1Click:Connect(function() Dp.Text = "  " .. opt; Open = false; for _, v in pairs(Sc:GetChildren()) do if v.Name == "DPOpt" then v.Visible = false end end; cb(opt) end)
                 end
             end
