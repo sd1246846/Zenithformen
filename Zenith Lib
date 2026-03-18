@@ -1,12 +1,14 @@
 local Zenith = { Connections = {} }
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
 
 -- [[ CLEANUP ]]
-if CoreGui:FindFirstChild("Zenith_Elite") then CoreGui:FindFirstChild("Zenith_Elite"):Destroy() end
-if CoreGui:FindFirstChild("Zenith_Restore") then CoreGui:FindFirstChild("Zenith_Restore"):Destroy() end
+local function destroyUI()
+    if CoreGui:FindFirstChild("Zenith_Elite") then CoreGui:FindFirstChild("Zenith_Elite"):Destroy() end
+    if CoreGui:FindFirstChild("Zenith_Restore") then CoreGui:FindFirstChild("Zenith_Restore"):Destroy() end
+end
+destroyUI()
 
 local function CreateTween(obj, info, goal)
     local tween = TweenService:Create(obj, TweenInfo.new(info or 0.3, Enum.EasingStyle.Quad), goal)
@@ -23,19 +25,19 @@ function Zenith:CreateWindow(config)
     local UI = Instance.new("ScreenGui", CoreGui); UI.Name = "Zenith_Elite"
     local RestoreUI = Instance.new("ScreenGui", CoreGui); RestoreUI.Name = "Zenith_Restore"; RestoreUI.Enabled = false
     
-    -- [[ MAIN GLASS FRAME ]]
+    -- [[ MAIN FRAME ]]
     local Main = Instance.new("Frame", UI)
     Main.Size = UDim2.new(0, 520, 0, 380); Main.Position = UDim2.new(0.5, -260, 0.5, -190)
-    Main.BackgroundColor3 = Color3.fromRGB(15, 10, 20); Main.BackgroundTransparency = 0.2
+    Main.BackgroundColor3 = Color3.fromRGB(12, 8, 18); Main.BackgroundTransparency = 0.2
     Main.Visible = not useKeySystem
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
     
-    local MainStroke = Instance.new("UIStroke", Main); MainStroke.Color = Color3.fromRGB(120, 80, 200); MainStroke.Thickness = 1.8; MainStroke.Transparency = 0.4
+    local MainStroke = Instance.new("UIStroke", Main); MainStroke.Color = Color3.fromRGB(140, 90, 255); MainStroke.Thickness = 2; MainStroke.Transparency = 0.3
     
     local MainGradient = Instance.new("UIGradient", Main)
     MainGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 20, 60)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 5, 25))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 15, 55)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 5, 20))
     })
     MainGradient.Rotation = 45
 
@@ -69,59 +71,45 @@ function Zenith:CreateWindow(config)
         local Box = Instance.new("TextBox", KeyFrame)
         Box.Size = UDim2.new(0.85, 0, 0, 40); Box.Position = UDim2.new(0.075, 0, 0.35, 0); Box.BackgroundColor3 = Color3.fromRGB(30, 20, 50); Box.PlaceholderText = "Paste Key Here..."; Box.Text = ""; Box.Font = Enum.Font.Gotham; Box.TextColor3 = Color3.fromRGB(255, 255, 255); Box.TextSize = 12; Instance.new("UICorner", Box)
 
-        local GetBtn = Instance.new("TextButton", KeyFrame); GetBtn.Size = UDim2.new(0.25, 0, 0, 35); GetBtn.Position = UDim2.new(0.075, 0, 0.65, 0); GetBtn.Text = "GET KEY"; GetBtn.BackgroundColor3 = Color3.fromRGB(40, 30, 60); GetBtn.TextColor3 = Color3.fromRGB(200, 180, 255); GetBtn.Font = Enum.Font.GothamBold; GetBtn.TextSize = 10; Instance.new("UICorner", GetBtn)
-        local PstBtn = Instance.new("TextButton", KeyFrame); PstBtn.Size = UDim2.new(0.25, 0, 0, 35); PstBtn.Position = UDim2.new(0.375, 0, 0.65, 0); PstBtn.Text = "PASTE"; PstBtn.BackgroundColor3 = Color3.fromRGB(40, 30, 60); PstBtn.TextColor3 = Color3.fromRGB(200, 180, 255); PstBtn.Font = Enum.Font.GothamBold; PstBtn.TextSize = 10; Instance.new("UICorner", PstBtn)
-        local ChkBtn = Instance.new("TextButton", KeyFrame); ChkBtn.Size = UDim2.new(0.25, 0, 0, 35); ChkBtn.Position = UDim2.new(0.675, 0, 0.65, 0); ChkBtn.Text = "CHECK"; ChkBtn.BackgroundColor3 = Color3.fromRGB(150, 100, 255); ChkBtn.TextColor3 = Color3.fromRGB(255, 255, 255); ChkBtn.Font = Enum.Font.GothamBold; ChkBtn.TextSize = 10; Instance.new("UICorner", ChkBtn)
+        local ChkBtn = Instance.new("TextButton", KeyFrame); ChkBtn.Size = UDim2.new(0.85, 0, 0, 40); ChkBtn.Position = UDim2.new(0.075, 0, 0.65, 0); ChkBtn.Text = "AUTHENTICATE"; ChkBtn.BackgroundColor3 = Color3.fromRGB(150, 100, 255); ChkBtn.TextColor3 = Color3.fromRGB(255, 255, 255); ChkBtn.Font = Enum.Font.GothamBold; ChkBtn.TextSize = 11; Instance.new("UICorner", ChkBtn)
 
-        local function validate(input)
+        ChkBtn.MouseButton1Click:Connect(function()
             local validKeys = keySettings.Key or {}
             for _, k in pairs(validKeys) do
-                if input == k then
-                    if keySettings.SaveKey then pcall(function() writefile(keySettings.FileName..".txt", input) end) end
-                    KeyFrame:Destroy(); Main.Visible = true; return true
-                end
+                if Box.Text == k then KeyFrame:Destroy(); Main.Visible = true return end
             end
-            Box.Text = "INVALID KEY"; task.wait(1); Box.Text = ""
-        end
-
-        GetBtn.MouseButton1Click:Connect(function() setclipboard(keySettings.Note or "") end)
-        PstBtn.MouseButton1Click:Connect(function() Box.Text = getclipboard() end)
-        ChkBtn.MouseButton1Click:Connect(function() validate(Box.Text) end)
-
-        if keySettings.SaveKey and isfile(keySettings.FileName..".txt") then
-            if validate(readfile(keySettings.FileName..".txt")) then KeyFrame:Destroy() end
-        end
+            Box.Text = ""; Box.PlaceholderText = "INVALID KEY"
+        end)
     end
 
-    -- [[ HEADER ]]
-    local Header = Instance.new("Frame", Main); Header.Size = UDim2.new(1, 0, 0, 45); Header.BackgroundTransparency = 1
-    local Title = Instance.new("TextLabel", Header); Title.Size = UDim2.new(1, -120, 1, 0); Title.Position = UDim2.new(0, 18, 0, 0); Title.Text = title:upper(); Title.Font = Enum.Font.GothamBold; Title.TextColor3 = Color3.fromRGB(240, 240, 255); Title.TextSize = 14; Title.BackgroundTransparency = 1; Title.TextXAlignment = 0
-    
-    local Line = Instance.new("Frame", Header); Line.Size = UDim2.new(1, -30, 0, 1); Line.Position = UDim2.new(0, 15, 1, -5); Line.BackgroundColor3 = Color3.fromRGB(150, 100, 255); Line.BorderSizePixel = 0
-    Instance.new("UIGradient", Line).Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,1), NumberSequenceKeypoint.new(0.5,0), NumberSequenceKeypoint.new(1,1)})
+    -- [[ HEADER (NO LINE) ]]
+    local Header = Instance.new("Frame", Main); Header.Size = UDim2.new(1, 0, 0, 50); Header.BackgroundTransparency = 1
+    local Title = Instance.new("TextLabel", Header); Title.Size = UDim2.new(1, -120, 1, 0); Title.Position = UDim2.new(0, 20, 0, 0); Title.Text = title:upper(); Title.Font = Enum.Font.GothamBold; Title.TextColor3 = Color3.fromRGB(255, 255, 255); Title.TextSize = 15; Title.BackgroundTransparency = 1; Title.TextXAlignment = 0
 
-    local CloseBtn = Instance.new("TextButton", Header); CloseBtn.Size = UDim2.new(0, 26, 0, 26); CloseBtn.Position = UDim2.new(1, -40, 0.5, -13); CloseBtn.Text = "×"; CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 60, 60); CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255); CloseBtn.Font = Enum.Font.GothamBold; Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1,0)
-    local MinBtn = Instance.new("TextButton", Header); MinBtn.Size = UDim2.new(0, 26, 0, 26); MinBtn.Position = UDim2.new(1, -75, 0.5, -13); MinBtn.Text = "−"; MinBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 45); MinBtn.TextColor3 = Color3.fromRGB(200, 200, 200); MinBtn.Font = Enum.Font.GothamBold; Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(1,0)
+    local CloseBtn = Instance.new("TextButton", Header); CloseBtn.Size = UDim2.new(0, 30, 0, 30); CloseBtn.Position = UDim2.new(1, -45, 0.5, -15); CloseBtn.Text = "×"; CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 65, 65); CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255); CloseBtn.Font = Enum.Font.GothamBold; CloseBtn.TextSize = 18; Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1,0)
+    local MinBtn = Instance.new("TextButton", Header); MinBtn.Size = UDim2.new(0, 30, 0, 30); MinBtn.Position = UDim2.new(1, -85, 0.5, -15); MinBtn.Text = "−"; MinBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 50); MinBtn.TextColor3 = Color3.fromRGB(220, 220, 220); MinBtn.Font = Enum.Font.GothamBold; MinBtn.TextSize = 18; Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(1,0)
 
     makeDraggable(Main, Header)
 
-    -- [[ NAVIGATION SIDEBAR ]]
-    local Nav = Instance.new("Frame", Main); Nav.Size = UDim2.new(0, 140, 1, -65); Nav.Position = UDim2.new(0, 12, 0, 55); Nav.BackgroundTransparency = 1
+    -- [[ CONTENT SIDEBAR ]]
+    local Nav = Instance.new("Frame", Main); Nav.Size = UDim2.new(0, 150, 1, -70); Nav.Position = UDim2.new(0, 15, 0, 60); Nav.BackgroundTransparency = 1
     local NavLayout = Instance.new("UIListLayout", Nav); NavLayout.Padding = UDim.new(0, 10)
 
-    local Container = Instance.new("Frame", Main); Container.Size = UDim2.new(1, -175, 1, -70); Container.Position = UDim2.new(0, 160, 0, 55); Container.BackgroundTransparency = 1
+    local Container = Instance.new("Frame", Main); Container.Size = UDim2.new(1, -190, 1, -70); Container.Position = UDim2.new(0, 175, 0, 60); Container.BackgroundTransparency = 1
 
-    CloseBtn.MouseButton1Click:Connect(function() UI:Destroy(); RestoreUI:Destroy() end)
+    -- [[ X BUTTON FIX ]]
+    CloseBtn.MouseButton1Click:Connect(destroyUI)
+    
     MinBtn.MouseButton1Click:Connect(function() Main.Visible = false; RestoreUI.Enabled = true end)
 
-    local RestoreBtn = Instance.new("TextButton", RestoreUI); RestoreBtn.Size = UDim2.new(0, 85, 0, 40); RestoreBtn.Position = UDim2.new(0, 20, 0.5, -20); RestoreBtn.BackgroundColor3 = Color3.fromRGB(20, 10, 30); RestoreBtn.Text = reopenText:upper(); RestoreBtn.Font = Enum.Font.GothamBold; RestoreBtn.TextColor3 = Color3.fromRGB(180, 140, 255); Instance.new("UICorner", RestoreBtn); Instance.new("UIStroke", RestoreBtn).Color = Color3.fromRGB(150, 100, 255)
+    local RestoreBtn = Instance.new("TextButton", RestoreUI); RestoreBtn.Size = UDim2.new(0, 90, 0, 40); RestoreBtn.Position = UDim2.new(0, 20, 0.5, -20); RestoreBtn.BackgroundColor3 = Color3.fromRGB(20, 10, 35); RestoreBtn.Text = reopenText:upper(); RestoreBtn.Font = Enum.Font.GothamBold; RestoreBtn.TextColor3 = Color3.fromRGB(200, 160, 255); Instance.new("UICorner", RestoreBtn); Instance.new("UIStroke", RestoreBtn).Color = Color3.fromRGB(160, 100, 255)
     makeDraggable(RestoreBtn, RestoreBtn)
     RestoreBtn.MouseButton1Click:Connect(function() Main.Visible = true; RestoreUI.Enabled = false end)
 
     local Window = { Tabs = {} }
     function Window:AddTab(name)
-        local TabBtn = Instance.new("TextButton", Nav); TabBtn.Size = UDim2.new(1, 0, 0, 38); TabBtn.BackgroundColor3 = Color3.fromRGB(40, 25, 60); TabBtn.BackgroundTransparency = 0.5; TabBtn.Text = "  " .. name:upper(); TabBtn.Font = Enum.Font.GothamBold; TabBtn.TextColor3 = Color3.fromRGB(150, 130, 180); TabBtn.TextSize = 10; TabBtn.TextXAlignment = 0; Instance.new("UICorner", TabBtn)
-        local TStroke = Instance.new("UIStroke", TabBtn); TStroke.Color = Color3.fromRGB(150, 100, 255); TStroke.Transparency = 0.8
+        local TabBtn = Instance.new("TextButton", Nav); TabBtn.Size = UDim2.new(1, 0, 0, 40); TabBtn.BackgroundColor3 = Color3.fromRGB(45, 30, 65); TabBtn.BackgroundTransparency = 0.6; TabBtn.Text = "  " .. name:upper(); TabBtn.Font = Enum.Font.GothamBold; TabBtn.TextColor3 = Color3.fromRGB(160, 140, 200); TabBtn.TextSize = 10; TabBtn.TextXAlignment = 0; Instance.new("UICorner", TabBtn)
+        local TStroke = Instance.new("UIStroke", TabBtn); TStroke.Color = Color3.fromRGB(160, 100, 255); TStroke.Transparency = 0.8
         
         local Page = Instance.new("ScrollingFrame", Container); Page.Size = UDim2.new(1, 0, 1, 0); Page.BackgroundTransparency = 1; Page.Visible = false; Page.ScrollBarThickness = 0; Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
         Instance.new("UIListLayout", Page).Padding = UDim.new(0, 15)
@@ -129,36 +117,36 @@ function Zenith:CreateWindow(config)
         TabBtn.MouseButton1Click:Connect(function()
             for _, t in pairs(Window.Tabs) do 
                 t.Page.Visible = false
-                CreateTween(t.Btn, 0.3, {BackgroundColor3 = Color3.fromRGB(40, 25, 60), TextColor3 = Color3.fromRGB(150, 130, 180)})
+                CreateTween(t.Btn, 0.3, {BackgroundColor3 = Color3.fromRGB(45, 30, 65), TextColor3 = Color3.fromRGB(160, 140, 200)})
                 t.Btn.UIStroke.Transparency = 0.8
             end
             Page.Visible = true
-            CreateTween(TabBtn, 0.3, {BackgroundColor3 = Color3.fromRGB(100, 60, 200), TextColor3 = Color3.fromRGB(255, 255, 255)})
+            CreateTween(TabBtn, 0.3, {BackgroundColor3 = Color3.fromRGB(120, 70, 220), TextColor3 = Color3.fromRGB(255, 255, 255)})
             TStroke.Transparency = 0
         end)
 
         table.insert(Window.Tabs, {Btn = TabBtn, Page = Page})
-        if #Window.Tabs == 1 then Page.Visible = true; TabBtn.BackgroundColor3 = Color3.fromRGB(100, 60, 200); TabBtn.TextColor3 = Color3.fromRGB(255, 255, 255); TStroke.Transparency = 0 end
+        if #Window.Tabs == 1 then Page.Visible = true; TabBtn.BackgroundColor3 = Color3.fromRGB(120, 70, 220); TabBtn.TextColor3 = Color3.fromRGB(255, 255, 255); TStroke.Transparency = 0 end
 
         local Tab = {}
         function Tab:AddSection(sName)
-            local Sec = Instance.new("Frame", Page); Sec.BackgroundColor3 = Color3.fromRGB(25, 15, 40); Sec.BackgroundTransparency = 0.4; Sec.Size = UDim2.new(1, 0, 0, 35); Sec.AutomaticSize = Enum.AutomaticSize.Y; Instance.new("UICorner", Sec); Instance.new("UIStroke", Sec).Color = Color3.fromRGB(100, 70, 150)
-            local Sc = Instance.new("Frame", Sec); Sc.Size = UDim2.new(1, 0, 0, 0); Sc.Position = UDim2.new(0, 0, 0, 35); Sc.BackgroundTransparency = 1; Sc.AutomaticSize = Enum.AutomaticSize.Y; Instance.new("UIPadding", Sec).PaddingBottom = UDim.new(0, 12)
+            local Sec = Instance.new("Frame", Page); Sec.BackgroundColor3 = Color3.fromRGB(25, 15, 45); Sec.BackgroundTransparency = 0.4; Sec.Size = UDim2.new(1, 0, 0, 40); Sec.AutomaticSize = Enum.AutomaticSize.Y; Instance.new("UICorner", Sec); Instance.new("UIStroke", Sec).Color = Color3.fromRGB(120, 80, 180)
+            local Sc = Instance.new("Frame", Sec); Sc.Size = UDim2.new(1, 0, 0, 0); Sc.Position = UDim2.new(0, 0, 0, 40); Sc.BackgroundTransparency = 1; Sc.AutomaticSize = Enum.AutomaticSize.Y; Instance.new("UIPadding", Sec).PaddingBottom = UDim.new(0, 12)
             Instance.new("UIListLayout", Sc).Padding = UDim.new(0, 10); Instance.new("UIPadding", Sc).PaddingLeft = UDim.new(0, 15); Sc.UIPadding.PaddingRight = UDim.new(0, 15)
             
-            local SHeader = Instance.new("TextLabel", Sec); SHeader.Size = UDim2.new(1, -10, 0, 35); SHeader.Position = UDim2.new(0, 15, 0, 0); SHeader.Text = sName:upper(); SHeader.Font = Enum.Font.GothamBold; SHeader.TextColor3 = Color3.fromRGB(180, 150, 255); SHeader.TextSize = 11; SHeader.BackgroundTransparency = 1; SHeader.TextXAlignment = 0
+            local SHeader = Instance.new("TextLabel", Sec); SHeader.Size = UDim2.new(1, -10, 0, 40); SHeader.Position = UDim2.new(0, 15, 0, 0); SHeader.Text = sName:upper(); SHeader.Font = Enum.Font.GothamBold; SHeader.TextColor3 = Color3.fromRGB(200, 180, 255); SHeader.TextSize = 11; SHeader.BackgroundTransparency = 1; SHeader.TextXAlignment = 0
 
             local E = {}
             function E:AddToggle(txt, def, cb)
-                local Tg = Instance.new("TextButton", Sc); Tg.Size = UDim2.new(1, 0, 0, 35); Tg.BackgroundColor3 = Color3.fromRGB(35, 25, 55); Tg.Text = "  " .. txt; Tg.Font = Enum.Font.Gotham; Tg.TextColor3 = Color3.fromRGB(220, 220, 220); Tg.TextSize = 11; Tg.TextXAlignment = 0; Instance.new("UICorner", Tg)
-                local Bx = Instance.new("Frame", Tg); Bx.Size = UDim2.new(0, 20, 0, 20); Bx.Position = UDim2.new(1, -30, 0.5, -10); Bx.BackgroundColor3 = def and Color3.fromRGB(180, 100, 255) or Color3.fromRGB(50, 40, 70); Instance.new("UICorner", Bx)
-                local s = def; Tg.MouseButton1Click:Connect(function() s = not s; CreateTween(Bx, 0.2, {BackgroundColor3 = s and Color3.fromRGB(180, 100, 255) or Color3.fromRGB(50, 40, 70)}); cb(s) end)
+                local Tg = Instance.new("TextButton", Sc); Tg.Size = UDim2.new(1, 0, 0, 38); Tg.BackgroundColor3 = Color3.fromRGB(40, 30, 60); Tg.Text = "  " .. txt; Tg.Font = Enum.Font.Gotham; Tg.TextColor3 = Color3.fromRGB(230, 230, 230); Tg.TextSize = 11; Tg.TextXAlignment = 0; Instance.new("UICorner", Tg)
+                local Bx = Instance.new("Frame", Tg); Bx.Size = UDim2.new(0, 20, 0, 20); Bx.Position = UDim2.new(1, -30, 0.5, -10); Bx.BackgroundColor3 = def and Color3.fromRGB(180, 100, 255) or Color3.fromRGB(60, 50, 80); Instance.new("UICorner", Bx)
+                local s = def; Tg.MouseButton1Click:Connect(function() s = not s; CreateTween(Bx, 0.2, {BackgroundColor3 = s and Color3.fromRGB(180, 100, 255) or Color3.fromRGB(60, 50, 80)}); cb(s) end)
             end
             
             function E:AddButton(txt, cb)
-                local Btn = Instance.new("TextButton", Sc); Btn.Size = UDim2.new(1, 0, 0, 35); Btn.BackgroundColor3 = Color3.fromRGB(45, 30, 70); Btn.Text = txt; Btn.Font = Enum.Font.Gotham; Btn.TextColor3 = Color3.fromRGB(240, 240, 240); Btn.TextSize = 11; Instance.new("UICorner", Btn); Btn.MouseButton1Click:Connect(cb)
-                Btn.MouseEnter:Connect(function() CreateTween(Btn, 0.2, {BackgroundColor3 = Color3.fromRGB(60, 40, 95)}) end)
-                Btn.MouseLeave:Connect(function() CreateTween(Btn, 0.2, {BackgroundColor3 = Color3.fromRGB(45, 30, 70)}) end)
+                local Btn = Instance.new("TextButton", Sc); Btn.Size = UDim2.new(1, 0, 0, 38); Btn.BackgroundColor3 = Color3.fromRGB(55, 40, 85); Btn.Text = txt; Btn.Font = Enum.Font.Gotham; Btn.TextColor3 = Color3.fromRGB(255, 255, 255); Btn.TextSize = 11; Instance.new("UICorner", Btn); Btn.MouseButton1Click:Connect(cb)
+                Btn.MouseEnter:Connect(function() CreateTween(Btn, 0.2, {BackgroundColor3 = Color3.fromRGB(75, 50, 115)}) end)
+                Btn.MouseLeave:Connect(function() CreateTween(Btn, 0.2, {BackgroundColor3 = Color3.fromRGB(55, 40, 85)}) end)
             end
             return E
         end
