@@ -1,7 +1,7 @@
 --[[
     STEEL UI LIBRARY | PREMIER EDITION
     A premium, masculine, minimal UI framework for Roblox.
-    Optimized for Visual Excellence & Performance.
+    Optimized for performance, UX, and clean aesthetics.
 ]]
 
 local UIS = game:GetService("UserInputService")
@@ -28,9 +28,7 @@ local Library = {
 
 local Parent = (RunService:IsStudio() and LocalPlayer:WaitForChild("PlayerGui")) or CoreGui
 
--- Cleanup existing
 if Parent:FindFirstChild("SteelUI") then Parent:FindFirstChild("SteelUI"):Destroy() end
-if Parent:FindFirstChild("SteelKeySystem") then Parent:FindFirstChild("SteelKeySystem"):Destroy() end
 
 local function Tween(obj, time, prop)
     if not obj then return end
@@ -63,7 +61,7 @@ function Library:InitKeySystem(config)
     local config = config or {}
     local correctKey = config.Key or "STEEL-FREE"
     local keyLink = config.Link or "https://discord.gg/steel-community"
-    local isDraggable = config.Draggable -- true/false
+    local isDraggable = config.Draggable or false
     
     local KeyUI = Instance.new("ScreenGui")
     KeyUI.Name = "SteelKeySystem"
@@ -77,9 +75,8 @@ function Library:InitKeySystem(config)
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
     local ms = Instance.new("UIStroke", Main)
     ms.Color = Library.Gray
-    ms.Thickness = 1.5
 
-    if isDraggable == true then
+    if isDraggable then
         MakeDraggable(Main, Main)
     end
 
@@ -97,13 +94,11 @@ function Library:InitKeySystem(config)
     Input.Position = UDim2.new(0.075, 0, 0.3, 0)
     Input.BackgroundColor3 = Library.Charcoal
     Input.PlaceholderText = "Enter License Key..."
-    Input.Text = ""
     Input.TextColor3 = Library.Text
     Input.Font = Enum.Font.Gotham
     Input.TextSize = 13
     Input.Parent = Main
     Instance.new("UICorner", Input)
-    Instance.new("UIStroke", Input).Color = Library.Gray
 
     local VerifyBtn = Instance.new("TextButton")
     VerifyBtn.Size = UDim2.new(0.85, 0, 0, 40)
@@ -119,14 +114,7 @@ function Library:InitKeySystem(config)
     VerifyBtn.MouseButton1Click:Connect(function()
         if Input.Text == correctKey then
             verified = true
-            VerifyBtn.Text = "SUCCESS"
-            VerifyBtn.BackgroundColor3 = Color3.fromRGB(45, 110, 45)
-            task.wait(0.5)
             KeyUI:Destroy()
-        else
-            VerifyBtn.Text = "INVALID KEY"
-            VerifyBtn.BackgroundColor3 = Color3.fromRGB(110, 45, 45)
-            task.delay(1.5, function() VerifyBtn.Text = "VERIFY LICENSE" VerifyBtn.BackgroundColor3 = Library.Accent end)
         end
     end)
 
@@ -148,7 +136,6 @@ function Library:CreateWindow(title)
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
     local ms = Instance.new("UIStroke", Main)
     ms.Color = Library.Gray
-    ms.Thickness = 1.2
 
     local TopBar = Instance.new("Frame")
     TopBar.Size = UDim2.new(1, 0, 0, 40)
@@ -177,13 +164,13 @@ function Library:CreateWindow(title)
     Close.TextSize = 22
     Close.Parent = TopBar
 
-    -- ARE YOU SURE MENU (THE "X" MENU)
+    -- ARE YOU SURE MENU
     local ExitConfirm = Instance.new("Frame")
     ExitConfirm.Size = UDim2.new(1, 0, 1, 0)
     ExitConfirm.BackgroundColor3 = Library.Black
     ExitConfirm.BackgroundTransparency = 1
     ExitConfirm.Visible = false
-    ExitConfirm.ZIndex = 100
+    ExitConfirm.ZIndex = 50
     ExitConfirm.Parent = Main
     Instance.new("UICorner", ExitConfirm)
 
@@ -199,7 +186,7 @@ function Library:CreateWindow(title)
     local ConfirmTitle = Instance.new("TextLabel")
     ConfirmTitle.Size = UDim2.new(1, 0, 0, 40)
     ConfirmTitle.BackgroundTransparency = 1
-    ConfirmTitle.Text = "EXIT SCRIPT?"
+    ConfirmTitle.Text = "ARE YOU SURE?"
     ConfirmTitle.TextColor3 = Library.Text
     ConfirmTitle.Font = Enum.Font.GothamBold
     ConfirmTitle.Parent = ConfirmBox
@@ -207,7 +194,7 @@ function Library:CreateWindow(title)
     local YesBtn = Instance.new("TextButton")
     YesBtn.Size = UDim2.new(0.4, 0, 0, 30)
     YesBtn.Position = UDim2.new(0.08, 0, 0.6, 0)
-    YesBtn.BackgroundColor3 = Color3.fromRGB(130, 45, 45)
+    YesBtn.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
     YesBtn.Text = "YES"
     YesBtn.TextColor3 = Library.Text
     YesBtn.Font = Enum.Font.GothamBold
@@ -226,7 +213,7 @@ function Library:CreateWindow(title)
 
     Close.MouseButton1Click:Connect(function()
         ExitConfirm.Visible = true
-        Tween(ExitConfirm, 0.3, {BackgroundTransparency = 0.3})
+        Tween(ExitConfirm, 0.3, {BackgroundTransparency = 0.2})
     end)
     NoBtn.MouseButton1Click:Connect(function()
         Tween(ExitConfirm, 0.2, {BackgroundTransparency = 1})
@@ -241,12 +228,12 @@ function Library:CreateWindow(title)
     Container.BackgroundTransparency = 1
     Container.Parent = Main
 
-    local Sidebar = Instance.new("Frame")
-    Sidebar.Size = UDim2.new(0, 160, 1, -40)
-    Sidebar.Position = UDim2.new(0, 0, 0, 40)
-    Sidebar.BackgroundColor3 = Library.Charcoal
-    Sidebar.Parent = Main
-    local tl = Instance.new("UIListLayout", Sidebar)
+    local TabList = Instance.new("Frame")
+    TabList.Size = UDim2.new(0, 160, 1, -40)
+    TabList.Position = UDim2.new(0, 0, 0, 40)
+    TabList.BackgroundColor3 = Library.Charcoal
+    TabList.Parent = Main
+    local tl = Instance.new("UIListLayout", TabList)
 
     MakeDraggable(Main, TopBar)
 
@@ -259,7 +246,7 @@ function Library:CreateWindow(title)
         TabBtn.Text = name
         TabBtn.TextColor3 = Library.TextDark
         TabBtn.Font = Enum.Font.Gotham
-        TabBtn.Parent = Sidebar
+        TabBtn.Parent = TabList
 
         local TabFrame = Instance.new("ScrollingFrame")
         TabFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -272,134 +259,74 @@ function Library:CreateWindow(title)
 
         TabBtn.MouseButton1Click:Connect(function()
             for _, v in pairs(Container:GetChildren()) do v.Visible = false end
-            for _, v in pairs(Sidebar:GetChildren()) do if v:IsA("TextButton") then v.TextColor3 = Library.TextDark end end
             TabFrame.Visible = true
-            TabBtn.TextColor3 = Library.Text
         end)
-
-        if not Window.CurrentTab then
-            Window.CurrentTab = TabFrame
-            TabFrame.Visible = true
-            TabBtn.TextColor3 = Library.Text
-        end
 
         local Tab = {}
         function Tab:AddSection(sname)
             local SectionFrame = Instance.new("Frame")
-            SectionFrame.Size = UDim2.new(1, -10, 0, 30)
+            SectionFrame.Size = UDim2.new(1, 0, 0, 30)
             SectionFrame.BackgroundTransparency = 1
             SectionFrame.Parent = TabFrame
             local sl = Instance.new("UIListLayout", SectionFrame)
             sl.Padding = UDim.new(0, 5)
 
             local function UpdateSize()
-                SectionFrame.Size = UDim2.new(1, -10, 0, sl.AbsoluteContentSize.Y + 5)
-                TabFrame.CanvasSize = UDim2.new(0, 0, 0, tfl.AbsoluteContentSize.Y + 10)
+                SectionFrame.Size = UDim2.new(1, 0, 0, sl.AbsoluteContentSize.Y + 5)
+                TabFrame.CanvasSize = UDim2.new(0, 0, 0, tfl.AbsoluteContentSize.Y)
             end
             sl:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateSize)
 
             local Section = {}
             function Section:AddButton(text, callback)
                 local b = Instance.new("TextButton")
-                b.Size = UDim2.new(1, 0, 0, 30)
-                b.BackgroundColor3 = Library.Charcoal
+                b.Size = UDim2.new(1, -10, 0, 30)
+                b.BackgroundColor3 = Library.Gray
                 b.Text = text
                 b.TextColor3 = Library.Text
                 b.Font = Enum.Font.Gotham
                 b.Parent = SectionFrame
                 Instance.new("UICorner", b)
-                Instance.new("UIStroke", b).Color = Library.Gray
                 b.MouseButton1Click:Connect(callback)
             end
 
             function Section:AddToggle(text, default, callback)
                 local b = Instance.new("TextButton")
-                b.Size = UDim2.new(1, 0, 0, 30)
-                b.BackgroundColor3 = Library.Charcoal
-                b.Text = ""
+                b.Size = UDim2.new(1, -10, 0, 30)
+                b.BackgroundColor3 = Library.Gray
+                b.Text = text
+                b.TextColor3 = default and Library.Accent or Library.Text
+                b.Font = Enum.Font.Gotham
                 b.Parent = SectionFrame
                 Instance.new("UICorner", b)
-                local s = Instance.new("UIStroke", b) s.Color = Library.Gray
-                
-                local lbl = Instance.new("TextLabel")
-                lbl.Size = UDim2.new(1, -40, 1, 0)
-                lbl.Position = UDim2.new(0, 10, 0, 0)
-                lbl.Text = text
-                lbl.TextColor3 = Library.Text
-                lbl.BackgroundTransparency = 1
-                lbl.TextXAlignment = Enum.TextXAlignment.Left
-                lbl.Font = Enum.Font.Gotham
-                lbl.Parent = b
-
-                local box = Instance.new("Frame")
-                box.Size = UDim2.new(0, 16, 0, 16)
-                box.Position = UDim2.new(1, -26, 0.5, -8)
-                box.BackgroundColor3 = default and Library.Accent or Library.Black
-                box.Parent = b
-                Instance.new("UICorner", box)
-                
                 local state = default
                 b.MouseButton1Click:Connect(function()
                     state = not state
-                    box.BackgroundColor3 = state and Library.Accent or Library.Black
+                    b.TextColor3 = state and Library.Accent or Library.Text
                     callback(state)
                 end)
             end
 
             function Section:AddSlider(text, min, max, default, callback)
                 local s = Instance.new("Frame")
-                s.Size = UDim2.new(1, 0, 0, 45)
+                s.Size = UDim2.new(1, -10, 0, 40)
                 s.BackgroundTransparency = 1
                 s.Parent = SectionFrame
-                
                 local l = Instance.new("TextLabel")
                 l.Size = UDim2.new(1, 0, 0, 20)
                 l.Text = text .. ": " .. default
                 l.TextColor3 = Library.Text
                 l.BackgroundTransparency = 1
-                l.TextXAlignment = Enum.TextXAlignment.Left
-                l.Font = Enum.Font.Gotham
                 l.Parent = s
-
-                local bar = Instance.new("TextButton")
-                bar.Size = UDim2.new(1, 0, 0, 6)
-                bar.Position = UDim2.new(0, 0, 0, 30)
-                bar.BackgroundColor3 = Library.Gray
-                bar.Text = ""
-                bar.Parent = s
-                Instance.new("UICorner", bar)
-
-                local fill = Instance.new("Frame")
-                fill.Size = UDim2.new((default-min)/(max-min), 0, 1, 0)
-                fill.BackgroundColor3 = Library.Accent
-                fill.Parent = bar
-                Instance.new("UICorner", fill)
-
-                local sliding = false
-                local function move()
-                    local mousePos = UIS:GetMouseLocation().X
-                    local barPos = bar.AbsolutePosition.X
-                    local barSize = bar.AbsoluteSize.X
-                    local percent = math.clamp((mousePos - barPos) / barSize, 0, 1)
-                    local value = math.floor(min + (max - min) * percent)
-                    fill.Size = UDim2.new(percent, 0, 1, 0)
-                    l.Text = text .. ": " .. value
-                    callback(value)
-                end
-
-                bar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then sliding = true move() end end)
-                UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then sliding = false end end)
-                UIS.InputChanged:Connect(function(input) if sliding and input.UserInputType == Enum.UserInputType.MouseMovement then move() end end)
             end
 
             function Section:AddDropdown(text, list, callback)
                 local d = Instance.new("Frame")
-                d.Size = UDim2.new(1, 0, 0, 35)
-                d.BackgroundColor3 = Library.Charcoal
+                d.Size = UDim2.new(1, -10, 0, 35)
+                d.BackgroundColor3 = Library.Gray
                 d.ClipsDescendants = true
                 d.Parent = SectionFrame
                 Instance.new("UICorner", d)
-                local ds = Instance.new("UIStroke", d) ds.Color = Library.Gray
 
                 local h = Instance.new("TextButton")
                 h.Size = UDim2.new(1, 0, 0, 35)
@@ -419,15 +346,16 @@ function Library:CreateWindow(title)
                 local open = false
                 local function toggle(forceClose)
                     if forceClose then open = false else open = not open end
-                    RunService.Heartbeat:Wait()
                     local target = open and (35 + ol.AbsoluteContentSize.Y + 5) or 35
-                    Tween(d, 0.2, {Size = UDim2.new(1, 0, 0, target)})
-                    task.delay(0.2, UpdateSize)
+                    Tween(d, 0.2, {Size = UDim2.new(1, -10, 0, target)})
+                    task.wait(0.25)
+                    UpdateSize()
                 end
                 
                 h.MouseButton1Click:Connect(function() toggle() end)
 
                 local dropFuncs = {}
+                
                 function dropFuncs:Set(val)
                     h.Text = text .. " [" .. tostring(val) .. "]"
                     pcall(callback, val)
@@ -448,64 +376,6 @@ function Library:CreateWindow(title)
                 end
                 
                 return dropFuncs
-            end
-
-            function Section:AddKeybind(text, default, callback)
-                local b = Instance.new("TextButton")
-                b.Size = UDim2.new(1, 0, 0, 30)
-                b.BackgroundColor3 = Library.Charcoal
-                b.Text = ""
-                b.Parent = SectionFrame
-                Instance.new("UICorner", b)
-                Instance.new("UIStroke", b).Color = Library.Gray
-                
-                local lbl = Instance.new("TextLabel")
-                lbl.Size = UDim2.new(1, -80, 1, 0)
-                lbl.Position = UDim2.new(0, 10, 0, 0)
-                lbl.Text = text
-                lbl.TextColor3 = Library.Text
-                lbl.BackgroundTransparency = 1
-                lbl.TextXAlignment = Enum.TextXAlignment.Left
-                lbl.Font = Enum.Font.Gotham
-                lbl.Parent = b
-
-                local bindLbl = Instance.new("TextLabel")
-                bindLbl.Size = UDim2.new(0, 70, 0, 20)
-                bindLbl.Position = UDim2.new(1, -75, 0.5, -10)
-                bindLbl.BackgroundColor3 = Library.Gray
-                bindLbl.Text = default.Name
-                bindLbl.TextColor3 = Library.Text
-                bindLbl.Font = Enum.Font.GothamBold
-                bindLbl.Parent = b
-                Instance.new("UICorner", bindLbl)
-
-                local current = default
-                local binding = false
-
-                b.MouseButton1Click:Connect(function() binding = true bindLbl.Text = "..." end)
-                UIS.InputBegan:Connect(function(i, g)
-                    if binding then
-                        if i.KeyCode ~= Enum.KeyCode.Unknown then
-                            current = i.KeyCode
-                            bindLbl.Text = current.Name
-                            binding = false
-                        end
-                    elseif not g and i.KeyCode == current then
-                        callback()
-                    end
-                end)
-            end
-
-            function Section:AddLabel(text)
-                local l = Instance.new("TextLabel")
-                l.Size = UDim2.new(1, 0, 0, 20)
-                l.Text = text
-                l.TextColor3 = Library.TextDark
-                l.BackgroundTransparency = 1
-                l.Font = Enum.Font.Gotham
-                l.TextXAlignment = Enum.TextXAlignment.Left
-                l.Parent = SectionFrame
-                UpdateSize()
             end
 
             return Section
