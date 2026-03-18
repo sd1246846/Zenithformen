@@ -27,15 +27,134 @@ local Library = {
     TextDark = Color3.fromRGB(150, 150, 150)
 }
 
+-- Safety: Check for CoreGui access
+local Parent = (RunService:IsStudio() and LocalPlayer:WaitForChild("PlayerGui")) or CoreGui
+
 -- Cleanup existing UI to prevent duplicates
-if CoreGui:FindFirstChild("SteelUI") then
-    CoreGui:FindFirstChild("SteelUI"):Destroy()
+if Parent:FindFirstChild("SteelUI") then
+    Parent:FindFirstChild("SteelUI"):Destroy()
+end
+if Parent:FindFirstChild("SteelKeySystem") then
+    Parent:FindFirstChild("SteelKeySystem"):Destroy()
 end
 
 local function Tween(obj, time, prop)
+    if not obj then return end
     local t = TweenService:Create(obj, TweenInfo.new(time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), prop)
     t:Play()
     return t
+end
+
+-- Built-in Key System
+function Library:InitKeySystem(config)
+    local config = config or {}
+    local correctKey = config.Key or "STEEL-FREE"
+    local keyLink = config.Link or "https://discord.gg/steel-community"
+    
+    local KeyUI = Instance.new("ScreenGui")
+    KeyUI.Name = "SteelKeySystem"
+    KeyUI.IgnoreGuiInset = true
+    KeyUI.Parent = Parent
+
+    local Main = Instance.new("Frame")
+    Main.Size = UDim2.new(0, 320, 0, 240)
+    Main.Position = UDim2.new(0.5, -160, 0.5, -120)
+    Main.BackgroundColor3 = Library.Black
+    Main.BorderSizePixel = 0
+    Main.Parent = KeyUI
+
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
+    local ms = Instance.new("UIStroke", Main)
+    ms.Color = Library.Gray
+    ms.Thickness = 2
+
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, 0, 0, 60)
+    Title.BackgroundTransparency = 1
+    Title.Text = "STEEL AUTHENTICATION"
+    Title.TextColor3 = Library.Text
+    Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 16
+    Title.Parent = Main
+
+    local Input = Instance.new("TextBox")
+    Input.Size = UDim2.new(0.85, 0, 0, 40)
+    Input.Position = UDim2.new(0.075, 0, 0.35, 0)
+    Input.BackgroundColor3 = Library.Charcoal
+    Input.Text = ""
+    Input.PlaceholderText = "Enter License Key..."
+    Input.TextColor3 = Library.Text
+    Input.PlaceholderColor3 = Library.TextDark
+    Input.Font = Enum.Font.Gotham
+    Input.TextSize = 13
+    Input.Parent = Main
+    Instance.new("UICorner", Input).CornerRadius = UDim.new(0, 6)
+    Instance.new("UIStroke", Input).Color = Library.Gray
+
+    local VerifyBtn = Instance.new("TextButton")
+    VerifyBtn.Size = UDim2.new(0.85, 0, 0, 40)
+    VerifyBtn.Position = UDim2.new(0.075, 0, 0.58, 0)
+    VerifyBtn.BackgroundColor3 = Library.Accent
+    VerifyBtn.Text = "VERIFY LICENSE"
+    VerifyBtn.TextColor3 = Library.Text
+    VerifyBtn.Font = Enum.Font.GothamBold
+    VerifyBtn.TextSize = 13
+    VerifyBtn.AutoButtonColor = false
+    VerifyBtn.Parent = Main
+    Instance.new("UICorner", VerifyBtn).CornerRadius = UDim.new(0, 6)
+
+    local GetKeyBtn = Instance.new("TextButton")
+    GetKeyBtn.Size = UDim2.new(0.85, 0, 0, 30)
+    GetKeyBtn.Position = UDim2.new(0.075, 0, 0.78, 0)
+    GetKeyBtn.BackgroundTransparency = 1
+    GetKeyBtn.Text = "GET KEY / DISCORD"
+    GetKeyBtn.TextColor3 = Library.TextDark
+    GetKeyBtn.Font = Enum.Font.Gotham
+    GetKeyBtn.TextSize = 11
+    GetKeyBtn.Parent = Main
+
+    local verified = false
+
+    VerifyBtn.MouseButton1Click:Connect(function()
+        if Input.Text == correctKey then
+            verified = true
+            VerifyBtn.Text = "ACCESS GRANTED"
+            VerifyBtn.BackgroundColor3 = Color3.fromRGB(40, 100, 40)
+            task.wait(0.5)
+            KeyUI:Destroy()
+        else
+            VerifyBtn.Text = "INVALID LICENSE"
+            VerifyBtn.BackgroundColor3 = Color3.fromRGB(100, 40, 40)
+            task.wait(1.5)
+            if VerifyBtn and VerifyBtn.Parent then
+                VerifyBtn.Text = "VERIFY LICENSE"
+                VerifyBtn.BackgroundColor3 = Library.Accent
+            end
+        end
+    end)
+
+    GetKeyBtn.MouseButton1Click:Connect(function()
+        pcall(function()
+            if setclipboard then
+                setclipboard(keyLink)
+                GetKeyBtn.Text = "COPIED TO CLIPBOARD"
+            else
+                GetKeyBtn.Text = "EXECUTOR LACKS CLIPBOARD"
+            end
+        end)
+        task.wait(1.5)
+        if GetKeyBtn and GetKeyBtn.Parent then
+            GetKeyBtn.Text = "GET KEY / DISCORD"
+        end
+    end)
+
+    -- Safe Loop
+    while not verified do
+        if not KeyUI or not KeyUI.Parent then break end
+        task.wait(0.1)
+    end
+    
+    return verified
 end
 
 function Library:CreateWindow(title)
@@ -43,24 +162,23 @@ function Library:CreateWindow(title)
     SteelUI.Name = "SteelUI"
     SteelUI.ResetOnSpawn = false
     SteelUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    SteelUI.Parent = CoreGui
+    SteelUI.Parent = Parent
 
     local Main = Instance.new("Frame")
     local MainCorner = Instance.new("UICorner")
     local MainStroke = Instance.new("UIStroke")
     local TopBar = Instance.new("Frame")
-    local TopBarCorner = Instance.new("UICorner") -- Added for clipping fix
+    local TopBarCorner = Instance.new("UICorner")
     local Title = Instance.new("TextLabel")
     local Buttons = Instance.new("Frame")
     local Minimize = Instance.new("TextButton")
     local Close = Instance.new("TextButton")
     local Sidebar = Instance.new("Frame")
-    local SidebarCorner = Instance.new("UICorner") -- Added for clipping fix
+    local SidebarCorner = Instance.new("UICorner")
     local Container = Instance.new("Frame")
     local TabList = Instance.new("ScrollingFrame")
     local TabListLayout = Instance.new("UIListLayout")
 
-    -- Reopen Button (Floating Widget)
     local Reopen = Instance.new("TextButton")
     local ReopenCorner = Instance.new("UICorner")
     local ReopenStroke = Instance.new("UIStroke")
@@ -82,7 +200,6 @@ function Library:CreateWindow(title)
     ReopenStroke.Thickness = 1.5
     ReopenStroke.Parent = Reopen
 
-    -- Main Window Setup
     Main.Name = "Main"
     Main.Size = UDim2.new(0, 550, 0, 380)
     Main.Position = UDim2.new(0.5, -275, 0.5, -190)
@@ -91,7 +208,7 @@ function Library:CreateWindow(title)
     Main.ClipsDescendants = true
     Main.Parent = SteelUI
 
-    MainCorner.CornerRadius = UDim.new(0, 8) -- Slightly increased for smoother look
+    MainCorner.CornerRadius = UDim.new(0, 8)
     MainCorner.Parent = Main
     MainStroke.Color = Library.Gray
     MainStroke.Thickness = 1.2
@@ -108,7 +225,6 @@ function Library:CreateWindow(title)
     TopBarCorner.CornerRadius = UDim.new(0, 8)
     TopBarCorner.Parent = TopBar
     
-    -- Square off the bottom of the TopBar so it doesn't show gaps
     local TopBarFiller = Instance.new("Frame")
     TopBarFiller.Size = UDim2.new(1, 0, 0, 10)
     TopBarFiller.Position = UDim2.new(0, 0, 1, -10)
@@ -166,7 +282,6 @@ function Library:CreateWindow(title)
     SidebarCorner.CornerRadius = UDim.new(0, 8)
     SidebarCorner.Parent = Sidebar
     
-    -- Square off the top and right of Sidebar
     local SidebarFiller = Instance.new("Frame")
     SidebarFiller.Size = UDim2.new(1, 10, 0.5, 0)
     SidebarFiller.BackgroundColor3 = Library.Charcoal
@@ -190,7 +305,6 @@ function Library:CreateWindow(title)
     Container.BackgroundTransparency = 1
     Container.Parent = Main
 
-    -- Modal System (Confirmation UI)
     local ModalOverlay = Instance.new("TextButton")
     ModalOverlay.Size = UDim2.new(1, 0, 1, 0)
     ModalOverlay.BackgroundColor3 = Color3.new(0,0,0)
@@ -243,7 +357,6 @@ function Library:CreateWindow(title)
     CancelBtn.Parent = Modal
     Instance.new("UICorner", CancelBtn).CornerRadius = UDim.new(0, 5)
 
-    -- Window Dragging Logic
     local dragging, dragInput, dragStart, startPos
     TopBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -269,7 +382,6 @@ function Library:CreateWindow(title)
         end
     end)
 
-    -- Minimize/Restore Logic
     local function ToggleUI(state)
         Library.Toggled = state
         if state then
@@ -278,12 +390,14 @@ function Library:CreateWindow(title)
             Tween(Main, 0.4, {Size = UDim2.new(0, 550, 0, 380), BackgroundTransparency = 0})
         else
             local t = Tween(Main, 0.3, {Size = UDim2.new(0, 550, 0, 0), BackgroundTransparency = 1})
-            t.Completed:Connect(function()
-                if not Library.Toggled then
-                    Main.Visible = false
-                    Reopen.Visible = true
-                end
-            end)
+            if t then
+                t.Completed:Connect(function()
+                    if not Library.Toggled then
+                        Main.Visible = false
+                        Reopen.Visible = true
+                    end
+                end)
+            end
         end
     end
 
@@ -297,12 +411,11 @@ function Library:CreateWindow(title)
 
     CancelBtn.MouseButton1Click:Connect(function()
         local t = Tween(ModalOverlay, 0.2, {BackgroundTransparency = 1})
-        t.Completed:Connect(function() ModalOverlay.Visible = false end)
+        if t then t.Completed:Connect(function() ModalOverlay.Visible = false end) end
     end)
 
     ConfirmBtn.MouseButton1Click:Connect(function() SteelUI:Destroy() end)
 
-    -- Toggle Hotkey
     UIS.InputBegan:Connect(function(input, gpe)
         if not gpe and input.KeyCode == Library.Keybind then
             ToggleUI(not Library.Toggled)
@@ -383,6 +496,7 @@ function Library:CreateWindow(title)
             SectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
             
             local function UpdateSize()
+                if not SectionFrame or not SectionLayout then return end
                 SectionFrame.Size = UDim2.new(1, -10, 0, SectionLayout.AbsoluteContentSize.Y)
                 TabFrame.CanvasSize = UDim2.new(0,0,0, TabFrameLayout.AbsoluteContentSize.Y + 20)
             end
@@ -435,7 +549,7 @@ function Library:CreateWindow(title)
                         Position = state and UDim2.new(0, 20, 0.5, -7) or UDim2.new(0, 2, 0.5, -7),
                         BackgroundColor3 = state and Library.Accent or Library.TextDark
                     })
-                    callback(state)
+                    pcall(callback, state)
                 end)
                 
                 Toggle.MouseEnter:Connect(function() Tween(ts, 0.2, {Color = Library.LightGray}) end)
@@ -460,7 +574,7 @@ function Library:CreateWindow(title)
                 Button.MouseButton1Down:Connect(function() Tween(Button, 0.1, {BackgroundColor3 = Library.Gray}) end)
                 Button.MouseButton1Up:Connect(function() 
                     Tween(Button, 0.1, {BackgroundColor3 = Library.Charcoal})
-                    callback()
+                    pcall(callback)
                 end)
                 Button.MouseEnter:Connect(function() Tween(bs, 0.2, {Color = Library.LightGray}) end)
                 Button.MouseLeave:Connect(function() Tween(bs, 0.2, {Color = Library.Gray}) end)
@@ -519,13 +633,12 @@ function Library:CreateWindow(title)
                     
                     SFill.Size = UDim2.new(perc, 0, 1, 0)
                     SVal.Text = tostring(val)
-                    callback(val)
+                    pcall(callback, val)
                 end
 
                 SBar.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
                         sliding = true
-                        dragging = false 
                     end
                 end)
                 UIS.InputEnded:Connect(function(input)
@@ -610,7 +723,7 @@ function Library:CreateWindow(title)
                         DVal.Text = v
                         open = false
                         Tween(Dropdown, 0.2, {Size = UDim2.new(1, 0, 0, 32)})
-                        callback(v)
+                        pcall(callback, v)
                     end)
                     Opt.MouseEnter:Connect(function() Opt.TextColor3 = Library.Text end)
                     Opt.MouseLeave:Connect(function() Opt.TextColor3 = Library.TextDark end)
@@ -667,7 +780,7 @@ function Library:CreateWindow(title)
                         current = input.KeyCode
                         KBtn.Text = current.Name
                     elseif not gpe and not binding and input.KeyCode == current then
-                        callback()
+                        pcall(callback)
                     end
                 end)
             end
